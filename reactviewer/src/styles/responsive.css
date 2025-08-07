@@ -1,0 +1,121 @@
+
+
+/* Container responsiveness */
+@media (max-width: 1200px) {
+  .container {
+    max-width: 100%;
+    padding: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 10px;
+  }
+  
+  h1 {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 8px;
+  }
+  
+  h1 {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+  }
+}
+
+/* ===== RESPONSIVE GRID SYSTEM ===== */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -10px;
+}
+
+.col {
+  flex: 1;
+  padding: 0 10px;
+}
+
+.col-1 { flex: 0 0 8.333%; }
+.col-2 { flex: 0 0 16.666%; }
+.col-3 { flex: 0 0 25%; }
+.col-4 { flex: 0 0 33.333%; }
+.col-6 { flex: 0 0 50%; }
+.col-8 { flex: 0 0 66.666%; }
+.col-12 { flex: 0 0 100%; }
+
+@media (max-width: 768px) {
+  .col-sm-12 { flex: 0 0 100%; }
+  .col-sm-6 { flex: 0 0 50%; }
+}
+
+@media (max-width: 480px) {
+  .col-xs-12 { flex: 0 0 100%; }
+}
+
+/* ===== RESPONSIVE VISIBILITY ===== */
+.hidden-mobile {
+  display: block;
+}
+
+.hidden-desktop {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .hidden-mobile {
+    display: none;
+  }
+  
+  .hidden-desktop {
+    display: block;
+  }
+}
+
+/* ===== RESPONSIVE TEXT SIZES ===== */
+@media (max-width: 768px) {
+  .text-responsive {
+    font-size: 14px;
+  }
+  
+  .text-responsive-sm {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .text-responsive {
+    font-size: 13px;
+  }
+  
+  .text-responsive-sm {
+    font-size: 11px;
+  }
+}
+
+/* ===== RESPONSIVE SPACING ===== */
+@media (max-width: 768px) {
+  .spacing-responsive {
+    margin: 15px 0;
+  }
+  
+  .padding-responsive {
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .spacing-responsive {
+    margin: 10px 0;
+  }
+  
+  .padding-responsive {
+    padding: 10px;
+  }
+}

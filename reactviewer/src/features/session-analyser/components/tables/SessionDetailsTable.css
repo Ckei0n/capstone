@@ -1,0 +1,26 @@
+/* ===== SESSION DETAILS CONTAINER STYLES ===== */
+
+.session-details-container {
+  margin-top: 30px;
+  background: white;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-strong);
+  overflow: hidden;
+}
+
+/* ===== ERROR DISPLAY WITHIN CONTAINER ===== */
+.session-details-container .error {
+  margin: 15px 20px;
+  color: var(--error-color);
+  background-color: var(--error-background);
+  border: 1px solid var(--error-border);
+  padding: 10px;
+  border-radius: var(--border-radius);
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .session-details-container {
+    margin-top: 20px;
+  }
+}

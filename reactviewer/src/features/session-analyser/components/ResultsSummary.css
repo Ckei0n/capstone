@@ -1,0 +1,59 @@
+/* ===== RESULTS SUMMARY STYLES ===== */
+.results-summary {
+  background: var(--background-light);
+  padding: 20px;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+
+.results-summary h2 {
+  color: var(--text-color);
+  margin-top: 0;
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: 10px;
+  font-size: 1.5rem;
+}
+
+.results-summary p {
+  margin: 10px 0;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.results-summary .summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.results-summary .summary-item:last-child {
+  border-bottom: none;
+}
+
+.results-summary .summary-label {
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.results-summary .summary-value {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 600px) {
+  .results-summary .summary-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  
+  .results-summary .summary-value {
+    font-size: 16px;
+  }
+}

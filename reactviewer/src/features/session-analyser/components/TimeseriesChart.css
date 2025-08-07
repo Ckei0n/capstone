@@ -1,0 +1,132 @@
+/* ===== TIMESERIES CHART STYLES ===== */
+.timeseries-container {
+  margin-top: 30px;
+  text-align: center;
+  overflow-x: auto;
+}
+
+.timeseries-container h3 {
+  color: var(--text-color);
+  margin-bottom: 20px;
+  font-size: 1.4rem;
+}
+
+.chart-instruction {
+  color: var(--text-muted);
+  font-style: italic;
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+
+.timeseries-container svg {
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  background-color: white;
+  box-shadow: var(--shadow-strong);
+  min-width: 1000px;
+  max-width: 100%;
+}
+
+/* ===== D3 CHART ELEMENTS ===== */
+/* Axes */
+.x-axis path,
+.y-axis path {
+  stroke: var(--text-color);
+  stroke-width: 1;
+  fill: none;
+}
+
+.x-axis line,
+.y-axis line {
+  stroke: var(--text-color);
+  stroke-width: 1;
+}
+
+.x-axis text,
+.y-axis text {
+  font-size: 11px;
+  fill: var(--text-color);
+  font-family: Arial, sans-serif;
+}
+
+/* Data points */
+.data-point {
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.data-point:hover {
+  filter: brightness(1.2);
+}
+
+/* Line path */
+.line {
+  stroke: var(--primary-color);
+  stroke-width: 2;
+  fill: none;
+}
+
+/* Legend */
+.legend {
+  font-size: 12px;
+}
+
+.legend text {
+  font-size: 13px;
+  fill: var(--text-color);
+  font-family: Arial, sans-serif;
+}
+
+/* Tooltip */
+.d3-tooltip {
+  pointer-events: none;
+  line-height: 1.4;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  border-radius: 5px;
+  padding: 10px;
+  font-size: 12px;
+  max-width: 300px;
+  z-index: 1000;
+  position: absolute;
+  font-family: Arial, sans-serif;
+}
+
+/* Grid lines */
+.grid line {
+  stroke: lightgrey;
+  stroke-opacity: 0.7;
+  shape-rendering: crispEdges;
+}
+
+.grid path {
+  stroke-width: 0;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 1200px) {
+  .timeseries-container {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .timeseries-container svg {
+    min-width: 800px;
+  }
+  
+  .chart-instruction {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .timeseries-container svg {
+    min-width: 600px;
+  }
+  
+  .timeseries-container h3 {
+    font-size: 1.2rem;
+  }
+}

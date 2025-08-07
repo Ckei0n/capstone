@@ -1,0 +1,82 @@
+/* ===== SESSION FORM STYLES ===== */
+.session-form {
+  background: var(--background-light);
+  padding: 20px;
+  border-radius: var(--border-radius-lg);
+  margin-bottom: 30px;
+  box-shadow: var(--shadow);
+}
+
+.session-form .form-group {
+  margin-bottom: 15px;
+}
+
+.session-form .form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: var(--text-muted);
+}
+
+.session-form .form-group input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.session-form .form-group input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+
+.session-form .submit-btn {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.2s;
+  width: 100%;
+}
+
+.session-form .submit-btn:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+}
+
+.session-form .submit-btn:disabled {
+  background-color: var(--secondary-color);
+  cursor: not-allowed;
+}
+
+/* ===== FORM RESPONSIVE DESIGN ===== */
+@media (min-width: 768px) {
+  .session-form {
+    padding: 25px;
+  }
+  
+  .session-form .form-row {
+    display: flex;
+    gap: 20px;
+  }
+  
+  .session-form .form-row .form-group {
+    flex: 1;
+  }
+  
+  .session-form .submit-btn {
+    width: auto;
+    min-width: 120px;
+  }
+}
+
+@media (max-width: 768px) {
+  .session-form .form-group input {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}

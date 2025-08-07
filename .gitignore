@@ -1,0 +1,11 @@
+# === SECRETS & ENVIRONMENT ===
+.env
+.env.local
+.env.production
+.env.staging
+*.properties.local
+application-local.properties
+secrets/
+*.key
+*.pem
+.dockerignore

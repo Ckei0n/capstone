@@ -1,0 +1,106 @@
+/* ===== SESSION TABLE HEADER STYLES ===== */
+
+.session-details-header {
+  background: var(--background-light);
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.session-details-header h3 {
+  margin: 0;
+  color: var(--text-color);
+  font-size: 1.3rem;
+}
+
+.session-details-controls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.session-count {
+  color: var(--text-muted);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* ===== ACTION BUTTONS ===== */
+.load-all-btn {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+}
+
+.load-all-btn:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+}
+
+.load-all-btn:disabled {
+  background-color: var(--secondary-color);
+  cursor: not-allowed;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  background-color: var(--error-background);
+  color: var(--error-color);
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .session-details-header {
+    padding: 12px 15px;
+  }
+  
+  .session-details-header h3 {
+    font-size: 1.1rem;
+  }
+  
+  .session-details-controls {
+    gap: 10px;
+  }
+  
+  .session-count {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .session-details-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .session-details-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

@@ -1,0 +1,57 @@
+/* main css index */
+
+/* Global styles and design tokens */
+@import './globals.css';
+
+/* Component-specific styles */
+@import '../shared//components/NavigationHeader.css';
+@import '../features/session-analyser/components/SessionForm.css';
+@import '../features/session-analyser/components/ResultsSummary.css';
+@import '../features/session-analyser/components/TimeseriesChart.css';
+@import '../features/session-analyser/components/tables/SessionDetailsTable.css';
+@import '../features/session-analyser/components/tables/SessionTableBody.css';
+@import '../features/session-analyser/components/tables/SessionTableHeader.css';
+
+/* Utility styles */
+@import './responsive.css';
+
+/* ===== ADDITIONAL GLOBAL OVERRIDES ===== */
+
+/* consistent box-sizing across all components */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Smooth scrolling for anchor links */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Remove default margins on common elements */
+body, h1, h2, h3, h4, h5, h6, p, ul, ol, li {
+  margin: 0;
+  padding: 0;
+}
+
+/* Consistent focus styling */
+button:focus,
+input:focus,
+select:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Improved accessibility for screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

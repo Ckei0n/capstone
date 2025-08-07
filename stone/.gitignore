@@ -1,0 +1,81 @@
+# === SPRING BOOT SPECIFIC ===
+HELP.md
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# === BUILD ARTIFACTS ===
+target/
+dist/
+build/
+out/
+*.jar
+*.war
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+# === IDE & EDITOR ===
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+*.swp
+*.swo
+*~
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# === SECRETS & ENVIRONMENT ===
+*.properties.local
+application-local.properties
+secrets/
+*.key
+*.pem
+
+# === DEPENDENCIES ===
+node_modules/
+.pnp
+.pnp.js
+
+# === LOGS ===
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# === DOCKER & CONTAINERS ===
+docker-data/
+postgres-data/
+opensearch-data/
+
+# === TESTING ===
+coverage/
+.nyc_output
+test-results/
+junit.xml
+
+# === TEMPORARY FILES ===
+*.tmp
+*.temp
+.cache/
+.parcel-cache

@@ -9,7 +9,7 @@ import UploadPage from './UploadPage';
 vi.mock('axios');
 const mockedAxios = vi.mocked(axios);
 
-// Helper function to render component with router
+// render component with router
 const renderWithRouter = (component) => {
   return render(
     <BrowserRouter>
@@ -22,40 +22,101 @@ describe('UploadPage', () => {
   beforeEach(() => {
     // Reset mocks before each test
     vi.clearAllMocks();
+    
+    // Mock successful CSRF token fetch for all tests
+    mockedAxios.get.mockResolvedValue({
+      data: {
+        token: 'mock-csrf-token',
+        headerName: 'X-CSRF-Token'
+      }
+    });
   });
 
   describe('Rendering', () => {
-    test('renders all essential elements', () => {
+    test('renders all essential elements', async () => {
       renderWithRouter(<UploadPage />);
       
-      expect(screen.getByText('← Back to Analyzer')).toBeInTheDocument();
+      // Wait for component to fully load after CSRF token fetch
+      await waitFor(() => {
+        expect(screen.getByText('← Back to Analyzer')).toBeInTheDocument();
+      });
+      
       expect(screen.getByText('Upload GZ Files')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Upload' })).toBeInTheDocument();
-      expect(screen.getByLabelText(/file/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Choose files/i)).toBeInTheDocument();
       expect(screen.getByRole('progressbar')).toBeInTheDocument();
       expect(screen.getByText('0%')).toBeInTheDocument();
     });
 
-    test('renders navigation link with correct path', () => {
+    test('renders navigation link with correct path', async () => {
       renderWithRouter(<UploadPage />);
       
-      const backLink = screen.getByRole('link', { name: '← Back to Analyzer' });
-      expect(backLink).toHaveAttribute('href', '/');
+      await waitFor(() => {
+        const backLink = screen.getByRole('link', { name: '← Back to Analyzer' });
+        expect(backLink).toHaveAttribute('href', '/');
+      });
     });
 
-    test('file input accepts multiple files', () => {
+    test('file input accepts multiple files', async () => {
       renderWithRouter(<UploadPage />);
       
-      const fileInput = screen.getByLabelText(/file/i);
-      expect(fileInput).toHaveAttribute('multiple');
+      await waitFor(() => {
+        const fileInput = screen.getByLabelText(/Choose files/i);
+        expect(fileInput).toHaveAttribute('multiple');
+      });
+    });
+  });
+
+  describe('CSRF Token Handling', () => {
+    test('fetches CSRF token on mount', async () => {
+      renderWithRouter(<UploadPage />);
+      
+      await waitFor(() => {
+        expect(mockedAxios.get).toHaveBeenCalledWith('/api/csrf', {
+          withCredentials: true
+        });
+      });
+    });
+
+    test('shows error message when CSRF token fetch fails', async () => {
+      mockedAxios.get.mockRejectedValueOnce(new Error('Network Error'));
+      
+      renderWithRouter(<UploadPage />);
+      
+      await waitFor(() => {
+        expect(screen.getByText('Failed to initialize security token')).toBeInTheDocument();
+      });
+    });
+
+    test('prevents upload when CSRF token is not available', async () => {
+      mockedAxios.get.mockRejectedValueOnce(new Error('Token fetch failed'));
+      
+      renderWithRouter(<UploadPage />);
+      
+      await waitFor(() => {
+        expect(screen.getByText('Failed to initialize security token')).toBeInTheDocument();
+      });
+      
+      const uploadButton = screen.getByRole('button', { name: 'Upload' });
+      fireEvent.click(uploadButton);
+      
+      await waitFor(() => {
+        expect(screen.getByText('Security token not available. Please refresh the page.')).toBeInTheDocument();
+      });
+      
+      expect(mockedAxios.post).not.toHaveBeenCalled();
     });
   });
 
   describe('File Selection', () => {
-    test('updates state when files are selected', () => {
+    test('updates state when files are selected', async () => {
       renderWithRouter(<UploadPage />);
       
-      const fileInput = screen.getByLabelText(/file/i);
+      await waitFor(() => {
+        expect(screen.getByText('← Back to Analyzer')).toBeInTheDocument();
+      });
+      
+      const fileInput = screen.getByLabelText(/Choose files/i);
       const file1 = new File(['content1'], 'test1.gz', { type: 'application/gzip' });
       const file2 = new File(['content2'], 'test2.gz', { type: 'application/gzip' });
       
@@ -76,7 +137,11 @@ describe('UploadPage', () => {
       
       renderWithRouter(<UploadPage />);
       
-      const fileInput = screen.getByLabelText(/file/i);
+      await waitFor(() => {
+        expect(mockedAxios.get).toHaveBeenCalled();
+      });
+      
+      const fileInput = screen.getByLabelText(/Choose files/i);
       const uploadButton = screen.getByRole('button', { name: 'Upload' });
       const file = new File(['content'], 'test.gz', { type: 'application/gzip' });
       
@@ -100,7 +165,11 @@ describe('UploadPage', () => {
       
       renderWithRouter(<UploadPage />);
       
-      const fileInput = screen.getByLabelText(/file/i);
+      await waitFor(() => {
+        expect(mockedAxios.get).toHaveBeenCalled();
+      });
+      
+      const fileInput = screen.getByLabelText(/Choose files/i);
       const uploadButton = screen.getByRole('button', { name: 'Upload' });
       const file = new File(['content'], 'test.gz', { type: 'application/gzip' });
       
@@ -118,7 +187,11 @@ describe('UploadPage', () => {
       
       renderWithRouter(<UploadPage />);
       
-      const fileInput = screen.getByLabelText(/file/i);
+      await waitFor(() => {
+        expect(mockedAxios.get).toHaveBeenCalled();
+      });
+      
+      const fileInput = screen.getByLabelText(/Choose files/i);
       const uploadButton = screen.getByRole('button', { name: 'Upload' });
       const file1 = new File(['content1'], 'test1.gz', { type: 'application/gzip' });
       const file2 = new File(['content2'], 'test2.gz', { type: 'application/gzip' });
@@ -132,8 +205,10 @@ describe('UploadPage', () => {
           expect.any(FormData),
           expect.objectContaining({
             headers: {
-              'Content-Type': 'multipart/form-data'
+              'Content-Type': 'multipart/form-data',
+              'X-CSRF-Token': 'mock-csrf-token'
             },
+            withCredentials: true,
             onUploadProgress: expect.any(Function)
           })
         );
@@ -148,7 +223,12 @@ describe('UploadPage', () => {
       
       renderWithRouter(<UploadPage />);
       
-      const fileInput = screen.getByLabelText(/file/i);
+  
+      await waitFor(() => {
+        expect(mockedAxios.get).toHaveBeenCalled();
+      });
+      
+      const fileInput = screen.getByLabelText(/Choose files/i);
       const uploadButton = screen.getByRole('button', { name: 'Upload' });
       const file = new File(['content'], 'test.gz', { type: 'application/gzip' });
       
@@ -172,7 +252,12 @@ describe('UploadPage', () => {
       
       renderWithRouter(<UploadPage />);
       
-      const fileInput = screen.getByLabelText(/file/i);
+      
+      await waitFor(() => {
+        expect(mockedAxios.get).toHaveBeenCalled();
+      });
+      
+      const fileInput = screen.getByLabelText(/Choose files/i);
       const uploadButton = screen.getByRole('button', { name: 'Upload' });
       const file = new File(['content'], 'test.gz', { type: 'application/gzip' });
       
@@ -189,6 +274,11 @@ describe('UploadPage', () => {
     test('handles upload with no files selected', async () => {
       renderWithRouter(<UploadPage />);
       
+
+      await waitFor(() => {
+        expect(mockedAxios.get).toHaveBeenCalled();
+      });
+      
       const uploadButton = screen.getByRole('button', { name: 'Upload' });
       fireEvent.click(uploadButton);
       
@@ -196,7 +286,14 @@ describe('UploadPage', () => {
         expect(mockedAxios.post).toHaveBeenCalledWith(
           '/api/import',
           expect.any(FormData),
-          expect.any(Object)
+          expect.objectContaining({
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              'X-CSRF-Token': 'mock-csrf-token'
+            },
+            withCredentials: true,
+            onUploadProgress: expect.any(Function)
+          })
         );
       });
     });
@@ -211,8 +308,12 @@ describe('UploadPage', () => {
       });
       
       renderWithRouter(<UploadPage />);
+   
+      await waitFor(() => {
+        expect(mockedAxios.get).toHaveBeenCalled();
+      });
       
-      const fileInput = screen.getByLabelText(/file/i);
+      const fileInput = screen.getByLabelText(/Choose files/i);
       const uploadButton = screen.getByRole('button', { name: 'Upload' });
       const file = new File(['content'], 'test.gz', { type: 'application/gzip' });
       
@@ -228,7 +329,11 @@ describe('UploadPage', () => {
     test('message state updates correctly on consecutive uploads', async () => {
       renderWithRouter(<UploadPage />);
       
-      const fileInput = screen.getByLabelText(/file/i);
+      await waitFor(() => {
+        expect(mockedAxios.get).toHaveBeenCalled();
+      });
+      
+      const fileInput = screen.getByLabelText(/Choose files/i);
       const uploadButton = screen.getByRole('button', { name: 'Upload' });
       const file = new File(['content'], 'test.gz', { type: 'application/gzip' });
       

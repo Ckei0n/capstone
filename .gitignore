@@ -9,3 +9,16 @@ secrets/
 *.key
 *.pem
 .dockerignore
+
+# === IDE & EDITOR ===
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+*.swp
+*.swo
+*~

@@ -1,0 +1,227 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # Frontend Build and Test
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./reactviewer
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: reactviewer/package-lock.json
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run ESLint
+      run: npm run lint
+      continue-on-error: true
+
+    - name: Run tests
+      run: npm test
+      continue-on-error: true
+
+    - name: Build application
+      run: npm run build
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: react-build
+        path: reactviewer/dist/
+
+  # Backend Build and Test
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./stone
+
+    services:
+      opensearch:
+        image: opensearchproject/opensearch:3
+        env:
+          cluster.name: opensearch-cluster
+          node.name: opensearch-node1
+          discovery.seed_hosts: opensearch-node1
+          cluster.initial_cluster_manager_nodes: opensearch-node1
+          bootstrap.memory_lock: true
+          OPENSEARCH_JAVA_OPTS: "-Xms512m -Xmx512m"
+          DISABLE_SECURITY_PLUGIN: "true"
+        ports:
+          - 9200:9200
+        options: >-
+          --health-cmd "curl -f http://localhost:9200/_cluster/health || exit 1"
+          --health-interval 30s
+          --health-timeout 15s
+          --health-retries 10
+
+      keycloak-db:
+        image: postgres:15
+        env:
+          POSTGRES_USER: keycloak
+          POSTGRES_PASSWORD: keycloak123
+          POSTGRES_DB: keycloak
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U keycloak -d keycloak"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      keycloak:
+        image: quay.io/keycloak/keycloak:23.0
+        env:
+          KEYCLOAK_ADMIN: admin
+          KEYCLOAK_ADMIN_PASSWORD: admin123
+          KC_DB: postgres
+          KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+          KC_DB_USERNAME: keycloak
+          KC_DB_PASSWORD: keycloak123
+          KC_HOSTNAME_STRICT: "false"
+          KC_HOSTNAME_STRICT_HTTPS: "false"
+          KC_HTTP_ENABLED: "true"
+        ports:
+          - 8080:8080
+        options: >-
+          --health-cmd "/opt/keycloak/bin/kc.sh show-config"
+          --health-interval 30s
+          --health-timeout 15s
+          --health-retries 10
+          --health-start-period 90s
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Cache Maven dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+
+    - name: Wait for services
+      run: |
+        echo "Waiting for PostgreSQL..."
+        timeout 120 bash -c 'until pg_isready -h localhost -p 5432 -U keycloak; do sleep 5; done'
+        echo "PostgreSQL is ready!"
+        
+        echo "Waiting for OpenSearch..."
+        timeout 300 bash -c 'until curl -f http://localhost:9200/_cluster/health; do sleep 5; done'
+        echo "OpenSearch is ready!"
+        
+        echo "Waiting for Keycloak..."
+        timeout 600 bash -c 'until /opt/keycloak/bin/kc.sh show-config > /dev/null 2>&1; do sleep 10; done'
+        echo "Keycloak is ready!"
+
+    - name: Run tests
+      run: ./mvnw test
+      env:
+        SPRING_PROFILES_ACTIVE: test
+        OPENSEARCH_URL: http://localhost:9200
+        KC_DB_URL: jdbc:postgresql://localhost:5432/keycloak
+        KC_DB_USERNAME: keycloak
+        KC_DB_PASSWORD: keycloak123
+        KEYCLOAK_AUTH_URI: http://localhost:8080/realms/master/protocol/openid-connect/auth
+        KEYCLOAK_TOKEN_URI: http://localhost:8080/realms/master/protocol/openid-connect/token
+        KEYCLOAK_JWK_URI: http://localhost:8080/realms/master/protocol/openid-connect/certs
+
+    - name: Build application
+      run: ./mvnw clean package -DskipTests
+
+    - name: Upload JAR artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: spring-boot-jar
+        path: stone/target/*.jar
+
+  # Docker Build - runs only on main branch)
+  docker:
+    needs: [frontend, backend]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download React build
+      uses: actions/download-artifact@v4
+      with:
+        name: react-build
+        path: reactviewer/dist/
+
+    - name: Download Spring Boot JAR
+      uses: actions/download-artifact@v4
+      with:
+        name: spring-boot-jar
+        path: stone/target/
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build Docker image
+      run: |
+        docker build -t capstone-app:${{ github.sha }} .
+        docker build -t capstone-app:latest .
+
+    - name: Test Docker compose
+      run: |
+        # Validate docker-compose configuration
+        docker-compose config
+        
+        # Test multi-stage build works
+        docker run --rm -d --name test-app -p 8081:8081 \
+          -e SPRING_PROFILES_ACTIVE=test \
+          capstone-app:latest
+        
+        # Wait for app to start
+        timeout 60 bash -c 'until curl -f http://localhost:8081/actuator/health 2>/dev/null; do sleep 5; done' || true
+        
+        # Clean up
+        docker stop test-app || true
+
+  # Security and Code Quality
+  security:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'

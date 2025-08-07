@@ -102,7 +102,6 @@ services:
       - opensearch-data1:/usr/share/opensearch/data
     expose:
       - "9200"
-      - "9600"
     networks:
       - opensearch-net
 

@@ -133,7 +133,7 @@ class ImportControllerTest {
                     .file(gzipFile)
                     .contentType(MediaType.MULTIPART_FORM_DATA))
                     .andExpect(status().isInternalServerError())
-                    .andExpect(content().string(containsString("Error processing file: test.gz - Invalid JSON format")));
+                    .andExpect(content().string(containsString("Error processing uploaded file. Please check the file format and try again.")));
 
             verify(openSearchService, never()).indexDocumentsByIndex(anyList());
         }
@@ -157,7 +157,7 @@ class ImportControllerTest {
                     .file(gzipFile)
                     .contentType(MediaType.MULTIPART_FORM_DATA))
                     .andExpect(status().isInternalServerError())
-                    .andExpect(content().string(containsString("Error processing file: test.gz - OpenSearch connection failed")));
+                    .andExpect(content().string(containsString("Error processing uploaded file. Please check the file format and try again.")));
         }
     }
 
@@ -172,7 +172,7 @@ class ImportControllerTest {
                 .file(invalidGzipFile)
                 .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isInternalServerError())
-                .andExpect(content().string(containsString("Error processing file: test.gz")));
+                .andExpect(content().string(containsString("Error processing uploaded file. Please check the file format and try again.")));
 
         verify(openSearchService, never()).indexDocumentsByIndex(anyList());
     }
@@ -227,7 +227,7 @@ class ImportControllerTest {
                     .file(validFile)
                     .contentType(MediaType.MULTIPART_FORM_DATA))
                     .andExpect(status().isInternalServerError())
-                    .andExpect(content().string(containsString("Error processing file: invalid.gz")));
+                    .andExpect(content().string(containsString("Error processing uploaded file. Please check the file format and try again.")));
         }
     }
 

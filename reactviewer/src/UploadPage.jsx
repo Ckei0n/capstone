@@ -8,12 +8,34 @@ const UploadPage = () => {
     const [files, setFiles] = useState([]);
     const [progress, setProgress] = useState(0);
     const [message, setMessage] = useState("");
+    const [csrfToken, setCsrfToken] = useState(null);
+
+    // Fetch CSRF token on component mount
+    useEffect(() => {
+        const fetchCsrfToken = async () => {
+        try {
+            const response = await axios.get('/api/csrf', {
+            withCredentials: true
+            });
+            setCsrfToken(response.data);
+        } catch (error) {
+            console.error('Failed to fetch CSRF token:', error);
+            setMessage("Failed to initialize security token");
+        }
+        };
+
+        fetchCsrfToken();
+    }, []);
 
     const handleFileChange = (e) => {
         setFiles(e.target.files);
     };
 
     const handleUpload = async () => {
+        if (!csrfToken) {
+        setMessage("Security token not available. Please refresh the page.");
+        return;
+    }
         const formData = new FormData();
         for (let i = 0; i < files.length; i++) {
             formData.append("files", files[i]);
@@ -23,7 +45,9 @@ const UploadPage = () => {
             const response = await axios.post("/api/import", formData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
+                    [csrfToken.headerName]: csrfToken.token
                 },
+                withCredentials: true, // Important for cookies
                 onUploadProgress: (progressEvent) => {
                     const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
                     setProgress(percent);

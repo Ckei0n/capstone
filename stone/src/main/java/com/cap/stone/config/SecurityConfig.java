@@ -15,7 +15,7 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(authz -> authz
                 // Allow static resources without authentication
-                .requestMatchers("/assets/**", "/static/**", "/favicon.ico").permitAll()
+                .requestMatchers("/assets/**", "/static/**", "/favicon.ico", "/api/csrf").permitAll()
                 // Require authentication for everything else
                 .anyRequest().authenticated()
             )
@@ -26,9 +26,7 @@ public class SecurityConfig {
             .logout(logout -> logout
                 .logoutSuccessUrl("/")
                 .invalidateHttpSession(true)
-                .clearAuthentication(true)
-            )
-            .csrf(csrf -> csrf.disable()); // Disable CSRF for simplicity, enable in production
+                .clearAuthentication(true));
             
         return http.build();
     }

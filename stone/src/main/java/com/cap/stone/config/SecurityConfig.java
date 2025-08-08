@@ -14,13 +14,13 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authz -> authz
-                // Allow static resources without authentication
-                .requestMatchers("/assets/**", "/static/**", "/favicon.ico", "/api/csrf").permitAll()
+                // Allow static resources and endpoints without authentication
+                .requestMatchers("/assets/**", "/static/**", "/favicon.ico", "/api/csrf","api/auth/verify").permitAll()
                 // Require authentication for everything else
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2
-                .defaultSuccessUrl("/", true)
+                .defaultSuccessUrl("/", false)
                 .failureUrl("/login?error=true")
             )
             .logout(logout -> logout

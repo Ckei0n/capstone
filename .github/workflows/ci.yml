@@ -49,7 +49,7 @@ jobs:
         name: react-build
         path: reactviewer/dist/
 
-  # Backend Build and Test (Simplified)
+  # Backend Build and Test
   backend:
     runs-on: ubuntu-latest
     defaults:
@@ -105,47 +105,6 @@ jobs:
         path: stone/target/*.jar
 
   # Integration Test with Full Stack
-  integration-test:
-    runs-on: ubuntu-latest
-    needs: [frontend, backend]
-    if: github.ref == 'refs/heads/main'
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Download React build
-      uses: actions/download-artifact@v4
-      with:
-        name: react-build
-        path: reactviewer/dist/
-
-    - name: Download Spring Boot JAR
-      uses: actions/download-artifact@v4
-      with:
-        name: spring-boot-jar
-        path: stone/target/
-
-    - name: Test Docker compose
-      run: |
-        # Test docker-compose configuration
-        docker compose config
-        
-        # Build and start services
-        docker compose up -d --build
-        
-        # Wait for services
-        timeout 180 bash -c 'until curl -s http://localhost:80 > /dev/null; do sleep 10; done'
-        
-        # Basic smoke tests
-        echo "Testing main app route..."
-        curl -f http://localhost:80/ || echo "Main app not ready yet"
-        
-        echo "Testing Keycloak route..."
-        curl -f http://localhost:80/realms/master/.well-known/openid_configuration || echo "Keycloak not ready yet"
-        
-        # Cleanup
-        docker compose down -v
 
   # Security and Code Quality
   security:

@@ -110,7 +110,7 @@ services:
     environment:
       - 'OPENSEARCH_HOSTS=["http://opensearch-node1:9200"]'
       - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true"
-      - "SERVER_BASEPATH=/opensearch"
+      - "SERVER_BASEPATH=/opensearch-internal"
       - "SERVER_REWRITEBASEPATH=true"
     depends_on:
       opensearch-node1:

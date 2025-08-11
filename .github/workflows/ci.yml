@@ -95,16 +95,39 @@ jobs:
         timeout 300 bash -c 'until curl -s http://localhost:9200/_cluster/health | grep -q "green\|yellow"; do sleep 10; done'
         echo "OpenSearch is ready!"
 
+    - name: Run unit tests
+      run: ./mvnw test
+      
+    - name: Generate test report
+      uses: dorny/test-reporter@v1
+      if: success() || failure()  
+      with:
+        name: Maven Tests
+        path: stone/target/surefire-reports/*.xml
+        reporter: java-junit
+        fail-on-error: true
+        
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()  
+      with:
+        name: test-results
+        path: |
+          stone/target/surefire-reports/
+          stone/target/failsafe-reports/
+          
     - name: Build application
       run: ./mvnw clean package -DskipTests
-
+      if: success()  
+      
     - name: Upload JAR artifact
       uses: actions/upload-artifact@v4
+      if: success() 
       with:
         name: spring-boot-jar
         path: stone/target/*.jar
 
-  # Integration Test with Full Stack
+  # Integration Test
 
   # Security and Code Quality
   security:

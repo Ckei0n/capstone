@@ -1,6 +1,7 @@
 package com.cap.stone.controller;
 
-import com.cap.stone.service.OsSearchService;
+import com.cap.stone.infra.opensearch.SessionDataService;
+import com.cap.stone.infra.opensearch.SessionQueryService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,23 +17,27 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api")
 public class SessionController {
+    
     @Autowired
-    private OsSearchService osSearchService;
+    private SessionQueryService sessionQueryService;
+    
+    @Autowired
+    private SessionDataService sessionDataService;
     
     @GetMapping("/sessions")
     public Object getSessions(@RequestParam String start,
                              @RequestParam String end) {
         Map<String, Object> response = new HashMap<>();
         try {
-            int totalUniqueSessions = osSearchService.countUniqueCommunityIds(start, end);
+            int totalUniqueSessions = sessionQueryService.countUniqueCommunityIdsByDateRange(start, end);
             response.put("totalUniqueSessions", totalUniqueSessions);
             
-            int snortHits = osSearchService.countSnortHits(start, end);
+            int snortHits = sessionQueryService.countSnortHitsByDateRange(start, end);
             response.put("snortHits", snortHits);
             
             // Get daily aggregated timeseries data grouped by date
-            Map<String, Object> timeseriesResult = osSearchService.getDailyTimeseriesData(start, end);
-            response.put("timeseriesData", timeseriesResult.get("dailyData"));  // Changed from communityData
+            Map<String, Object> timeseriesResult = sessionDataService.getDailyTimeseriesData(start, end);
+            response.put("timeseriesData", timeseriesResult.get("dailyData"));
             response.put("totalHitsInRange", timeseriesResult.get("totalHits"));
         } catch (IOException e) {
             e.printStackTrace();
@@ -47,7 +52,7 @@ public class SessionController {
                                         @RequestParam String date) {
         Map<String, Object> response = new HashMap<>();
         try {
-            List<Map<String, Object>> sessions = osSearchService.getSessionsForSpecificDay(start, end, date);
+            List<Map<String, Object>> sessions = sessionDataService.getSessionsForSpecificDay(date);
             response.put("sessions", sessions);
             response.put("totalSessions", sessions.size());
             response.put("date", date);

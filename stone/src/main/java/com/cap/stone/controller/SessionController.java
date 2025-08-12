@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -46,20 +45,4 @@ public class SessionController {
         return response;
     }
     
-    @GetMapping("/sessions/daily-details")
-    public Object getDailySessionDetails(@RequestParam String start,
-                                        @RequestParam String end,
-                                        @RequestParam String date) {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            List<Map<String, Object>> sessions = sessionDataService.getSessionsForSpecificDay(date);
-            response.put("sessions", sessions);
-            response.put("totalSessions", sessions.size());
-            response.put("date", date);
-        } catch (IOException e) {
-            e.printStackTrace();
-            response.put("error", "Error fetching daily session details");
-        }
-        return response;
-    }
 }

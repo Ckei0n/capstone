@@ -136,119 +136,6 @@ class SessionControllerTest {
     }
 
     @Test
-    void testGetDailySessionDetails_Success() throws Exception {
-        
-        String startDate = "2024-01-01";
-        String endDate = "2024-01-31";
-        String specificDate = "2024-01-15";
-        
-        List<Map<String, Object>> expectedSessions = Arrays.asList(
-            createSessionEntry("session1", "community1", "10.0.0.1"),
-            createSessionEntry("session2", "community2", "10.0.0.2"),
-            createSessionEntry("session3", "community1", "10.0.0.3")
-        );
-
-        when(sessionDataService.getSessionsForSpecificDay(specificDate))
-            .thenReturn(expectedSessions);
-
-      
-        mockMvc.perform(get("/api/sessions/daily-details")
-                .param("start", startDate)
-                .param("end", endDate)
-                .param("date", specificDate)
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.sessions", hasSize(3)))
-                .andExpect(jsonPath("$.sessions[0].sessionId", is("session1")))
-                .andExpect(jsonPath("$.sessions[0].communityId", is("community1")))
-                .andExpect(jsonPath("$.sessions[0].ipAddress", is("10.0.0.1")))
-                .andExpect(jsonPath("$.totalSessions", is(3)))
-                .andExpect(jsonPath("$.date", is(specificDate)))
-                .andExpect(jsonPath("$.error").doesNotExist());
-
-        verify(sessionDataService).getSessionsForSpecificDay(specificDate);
-    }
-
-    @Test
-    void testGetDailySessionDetails_EmptyResult() throws Exception {
-     
-        String startDate = "2024-01-01";
-        String endDate = "2024-01-31";
-        String specificDate = "2024-01-15";
-        
-        List<Map<String, Object>> emptySessions = new ArrayList<>();
-
-        when(sessionDataService.getSessionsForSpecificDay(specificDate))
-            .thenReturn(emptySessions);
-
-       
-        mockMvc.perform(get("/api/sessions/daily-details")
-                .param("start", startDate)
-                .param("end", endDate)
-                .param("date", specificDate)
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.sessions", hasSize(0)))
-                .andExpect(jsonPath("$.totalSessions", is(0)))
-                .andExpect(jsonPath("$.date", is(specificDate)))
-                .andExpect(jsonPath("$.error").doesNotExist());
-
-        verify(sessionDataService).getSessionsForSpecificDay(specificDate);
-    }
-
-    @Test
-    void testGetDailySessionDetails_IOException() throws Exception {
-     
-        String startDate = "2024-01-01";
-        String endDate = "2024-01-31";
-        String specificDate = "2024-01-15";
-
-        when(sessionDataService.getSessionsForSpecificDay(specificDate))
-            .thenThrow(new IOException("File read error"));
-
-      
-        mockMvc.perform(get("/api/sessions/daily-details")
-                .param("start", startDate)
-                .param("end", endDate)
-                .param("date", specificDate)
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.error", is("Error fetching daily session details")))
-                .andExpect(jsonPath("$.sessions").doesNotExist())
-                .andExpect(jsonPath("$.totalSessions").doesNotExist())
-                .andExpect(jsonPath("$.date").doesNotExist());
-
-        verify(sessionDataService).getSessionsForSpecificDay(specificDate);
-    }
-
-    @Test
-    void testGetDailySessionDetails_MissingRequiredParameters() throws Exception {
-        // Test missing date parameter
-        mockMvc.perform(get("/api/sessions/daily-details")
-                .param("start", "2024-01-01")
-                .param("end", "2024-01-31")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-
-        // Test missing start parameter
-        mockMvc.perform(get("/api/sessions/daily-details")
-                .param("end", "2024-01-31")
-                .param("date", "2024-01-15")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-
-        // Test missing end parameter
-        mockMvc.perform(get("/api/sessions/daily-details")
-                .param("start", "2024-01-01")
-                .param("date", "2024-01-15")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-
-        // Verify no service calls are made
-        verifyNoInteractions(sessionDataService);
-    }
-
-    @Test
     void testGetSessions_ServiceCallsWithCorrectParameters() throws Exception {
       
         String startDate = "2024-03-01";
@@ -272,24 +159,6 @@ class SessionControllerTest {
         verify(sessionDataService).getDailyTimeseriesData(eq(startDate), eq(endDate));
     }
 
-    @Test
-    void testGetDailySessionDetails_ServiceCallWithCorrectParameter() throws Exception {
-  
-        String specificDate = "2024-02-14";
-        
-        when(sessionDataService.getSessionsForSpecificDay(specificDate))
-            .thenReturn(Collections.emptyList());
-
- 
-        mockMvc.perform(get("/api/sessions/daily-details")
-                .param("start", "2024-01-01")
-                .param("end", "2024-01-31")
-                .param("date", specificDate));
-
-
-        verify(sessionDataService).getSessionsForSpecificDay(eq(specificDate));
-    }
-
     // Helper methods for creating test data
     private Map<String, Object> createDailyDataEntry(String date, int sessions, int hits) {
         Map<String, Object> entry = new HashMap<>();
@@ -297,13 +166,5 @@ class SessionControllerTest {
         entry.put("sessions", sessions);
         entry.put("hits", hits);
         return entry;
-    }
-
-    private Map<String, Object> createSessionEntry(String sessionId, String communityId, String ipAddress) {
-        Map<String, Object> session = new HashMap<>();
-        session.put("sessionId", sessionId);
-        session.put("communityId", communityId);
-        session.put("ipAddress", ipAddress);
-        return session;
     }
 }

@@ -27,7 +27,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/assets/**", "/static/**", "/favicon.ico", "/api/csrf", "api/auth/verify").permitAll()
+                .requestMatchers("/assets/**", "/static/**", "/favicon.ico", "/api/csrf").permitAll()
                 .requestMatchers("/opensearch/**").hasAuthority("admin")
                 .anyRequest().authenticated()
             )

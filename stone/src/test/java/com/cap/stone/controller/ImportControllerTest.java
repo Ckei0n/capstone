@@ -1,6 +1,6 @@
 package com.cap.stone.controller;
 
-import com.cap.stone.service.OpenSearchService;
+import com.cap.stone.service.ImportService;
 import com.cap.stone.util.GzipJsonReader;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,7 +41,7 @@ class ImportControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private OpenSearchService openSearchService;
+    private ImportService importService;
 
     @Test
     void shouldSuccessfullyImportSingleGzipFile() throws Exception {
@@ -57,7 +57,7 @@ class ImportControllerTest {
             mockedReader.when(() -> GzipJsonReader.readGzipJsonStream(any(InputStream.class)))
                        .thenReturn(mockDocuments);
             
-            when(openSearchService.indexDocumentsByIndex(mockDocuments))
+            when(importService.indexDocumentsByIndex(mockDocuments))
                 .thenReturn(mockIndexCounts);
 
             // When & Then
@@ -73,7 +73,7 @@ class ImportControllerTest {
                 .contains("Successfully imported 2 documents from 1 file(s) into 1 indices:")
                 .contains("- index1: 2 documents");
 
-            verify(openSearchService).indexDocumentsByIndex(mockDocuments);
+            verify(importService).indexDocumentsByIndex(mockDocuments);
         }
     }
 
@@ -96,9 +96,9 @@ class ImportControllerTest {
                        .thenReturn(mockDocuments1)
                        .thenReturn(mockDocuments2);
             
-            when(openSearchService.indexDocumentsByIndex(mockDocuments1))
+            when(importService.indexDocumentsByIndex(mockDocuments1))
                 .thenReturn(mockIndexCounts1);
-            when(openSearchService.indexDocumentsByIndex(mockDocuments2))
+            when(importService.indexDocumentsByIndex(mockDocuments2))
                 .thenReturn(mockIndexCounts2);
 
             // When & Then
@@ -115,7 +115,7 @@ class ImportControllerTest {
                 .contains("- index1: 3 documents")
                 .contains("- index2: 2 documents");
 
-            verify(openSearchService, times(2)).indexDocumentsByIndex(anyList());
+            verify(importService, times(2)).indexDocumentsByIndex(anyList());
         }
     }
 
@@ -135,7 +135,7 @@ class ImportControllerTest {
                     .andExpect(status().isInternalServerError())
                     .andExpect(content().string(containsString("Error processing uploaded file. Please check the file format and try again.")));
 
-            verify(openSearchService, never()).indexDocumentsByIndex(anyList());
+            verify(importService, never()).indexDocumentsByIndex(anyList());
         }
     }
 
@@ -149,7 +149,7 @@ class ImportControllerTest {
             mockedReader.when(() -> GzipJsonReader.readGzipJsonStream(any(InputStream.class)))
                        .thenReturn(mockDocuments);
             
-            when(openSearchService.indexDocumentsByIndex(mockDocuments))
+            when(importService.indexDocumentsByIndex(mockDocuments))
                 .thenThrow(new RuntimeException("OpenSearch connection failed"));
 
             // When & Then
@@ -174,7 +174,7 @@ class ImportControllerTest {
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().string(containsString("Error processing uploaded file. Please check the file format and try again.")));
 
-        verify(openSearchService, never()).indexDocumentsByIndex(anyList());
+        verify(importService, never()).indexDocumentsByIndex(anyList());
     }
 
     @Test
@@ -184,7 +184,7 @@ class ImportControllerTest {
                 .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isBadRequest());
         
-        verify(openSearchService, never()).indexDocumentsByIndex(anyList());
+        verify(importService, never()).indexDocumentsByIndex(anyList());
     }
 
     @Test
@@ -196,7 +196,7 @@ class ImportControllerTest {
             mockedReader.when(() -> GzipJsonReader.readGzipJsonStream(any(InputStream.class)))
                        .thenReturn(List.of());
             
-            when(openSearchService.indexDocumentsByIndex(List.of()))
+            when(importService.indexDocumentsByIndex(List.of()))
                 .thenReturn(new HashMap<>());
 
             // When & Then

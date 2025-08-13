@@ -12,12 +12,22 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @Controller
 @RequestMapping("/opensearch")
-public class OpenSearchController {
+public class RedirectController {
 
     @GetMapping("/**")
-    public void redirectToOpenSearch(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
+    public void redirectToOpenSearch(HttpServletRequest request, 
+                                   HttpServletResponse response, 
+                                   Authentication authentication) throws IOException {
         
-        // Redirect to the actual OpenSearch dashboard (relative URL)
+        String requestPath = request.getRequestURI();
+        
+        // path traversal protection
+        if (requestPath.contains("..") || requestPath.contains("//")) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid path");
+            return;
+        }
+        
+        // Redirect to the actual OpenSearch dashboard
         response.sendRedirect("/opensearch-internal");
         //response.setHeader("X-Opensearch-Auth", "secretnolooking");
         //response.setHeader("X-Accel-Redirect", "/opensearch-internal");

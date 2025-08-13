@@ -1,10 +1,11 @@
 package com.cap.stone.infra.opensearch;
 
-import org.opensearch.index.query.BoolQueryBuilder;
-import org.opensearch.index.query.QueryBuilders;
-import org.opensearch.search.SearchHit;
-import org.opensearch.search.builder.SearchSourceBuilder;
-import org.opensearch.search.sort.SortOrder;
+import org.opensearch.client.opensearch._types.query_dsl.BoolQuery;
+import org.opensearch.client.opensearch._types.query_dsl.ExistsQuery;
+import org.opensearch.client.opensearch._types.query_dsl.Query;
+import org.opensearch.client.opensearch._types.SortOrder;
+import org.opensearch.client.opensearch.core.SearchResponse;
+import org.opensearch.client.opensearch.core.search.Hit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -42,23 +43,26 @@ public class SessionDataService {
             String indexPattern = buildIndexPattern(currentDate);
             
             try {
-                BoolQueryBuilder sidQuery = QueryBuilders.boolQuery()
-                    .must(QueryBuilders.existsQuery(SID_FIELD));
+                Query sidQuery = Query.of(q -> q.bool(BoolQuery.of(b -> b
+                    .must(Query.of(mq -> mq.exists(ExistsQuery.of(e -> e.field(SID_FIELD)))))
+                )));
                 
-                SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
-                    .query(sidQuery)
-                    .size(10000)
-                    .sort(TIMESTAMP_FIELD, SortOrder.DESC)
-                    .fetchSource(dataProcessor.getDetailedFields(), null);
+                SearchResponse<Map<String, Object>> response = clientService.executeSearch(
+                    indexPattern, 
+                    sidQuery, 
+                    10000, 
+                    dataProcessor.getDetailedFields(),
+                    TIMESTAMP_FIELD,
+                    SortOrder.Desc
+                );
                 
-                var response = clientService.executeSearch(indexPattern, sourceBuilder);
-                SearchHit[] hits = response.getHits().getHits();
+                List<Hit<Map<String, Object>>> hits = response.hits().hits();
                 
-                if (hits.length > 0) {
+                if (!hits.isEmpty()) {
                     String singaporeDate = currentDate.toString();
                     SessionGroup group = singaporeDateGroups.computeIfAbsent(singaporeDate, SessionGroup::new);
                     
-                    for (SearchHit hit : hits) {
+                    for (Hit<Map<String, Object>> hit : hits) {
                         Map<String, Object> processedSession = dataProcessor.processHit(hit);
                         group.addSession(processedSession);
                         
@@ -89,19 +93,21 @@ public class SessionDataService {
         LocalDate localDate = LocalDate.parse(date);
         String indexPattern = buildIndexPattern(localDate);
         
-        BoolQueryBuilder sidQuery = QueryBuilders.boolQuery()
-            .must(QueryBuilders.existsQuery(SID_FIELD));
+        Query sidQuery = Query.of(q -> q.bool(BoolQuery.of(b -> b
+            .must(Query.of(mq -> mq.exists(ExistsQuery.of(e -> e.field(SID_FIELD)))))
+        )));
         
-        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
-            .query(sidQuery)
-            .size(10000)
-            .sort(TIMESTAMP_FIELD, SortOrder.DESC)
-            .fetchSource(dataProcessor.getDetailedFields(), null);
-        
-        var response = clientService.executeSearch(indexPattern, sourceBuilder);
+        SearchResponse<Map<String, Object>> response = clientService.executeSearch(
+            indexPattern, 
+            sidQuery, 
+            10000, 
+            dataProcessor.getDetailedFields(),
+            TIMESTAMP_FIELD,
+            SortOrder.Desc
+        );
         
         List<Map<String, Object>> sessions = new ArrayList<>();
-        for (SearchHit hit : response.getHits().getHits()) {
+        for (Hit<Map<String, Object>> hit : response.hits().hits()) {
             sessions.add(dataProcessor.processHit(hit));
         }
         

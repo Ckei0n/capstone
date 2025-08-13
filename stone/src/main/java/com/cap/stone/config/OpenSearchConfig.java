@@ -1,27 +1,29 @@
 package com.cap.stone.config;
 
-import org.opensearch.client.RestHighLevelClient;
-import org.opensearch.data.client.orhlc.AbstractOpenSearchConfiguration;
-import org.opensearch.data.client.orhlc.ClientConfiguration;
-import org.opensearch.data.client.orhlc.RestClients;
+import org.apache.hc.client5.http.impl.nio.PoolingAsyncClientConnectionManagerBuilder;
+import org.apache.hc.core5.http.HttpHost;
+import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.transport.OpenSearchTransport;
+import org.opensearch.client.transport.httpclient5.ApacheHttpClient5TransportBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-
-
 @Configuration
-public class OpenSearchConfig extends AbstractOpenSearchConfiguration {
+public class OpenSearchConfig {
 
-    @Override
-    @Bean(name = "customOpenSearchClient") //use because custom bean name becausee opensearchClient shares the same bean name
-    public RestHighLevelClient opensearchClient() {
+    @Bean
+    public OpenSearchClient openSearchClient() {
+        // Define your OpenSearch HTTP host
+        final HttpHost host = new HttpHost("http", "opensearch-node1", 9200);
 
-        final ClientConfiguration clientConfiguration = ClientConfiguration.builder()
-                .connectedTo("opensearch-node1:9200")
-              //  .usingSsl()  // enable HTTPS
-              //  .withBasicAuth()  // add your credentials
-                .build();
+        // Build the Apache HTTP client
+        final ApacheHttpClient5TransportBuilder builder = ApacheHttpClient5TransportBuilder.builder(host);
+        builder.setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder
+            .setConnectionManager(PoolingAsyncClientConnectionManagerBuilder.create().build())
+        );
 
-        return RestClients.create(clientConfiguration).rest();
+        // Create and return the OpenSearch client
+        OpenSearchTransport transport = builder.build();
+        return new OpenSearchClient(transport);
     }
 }

@@ -1,26 +1,29 @@
 package com.cap.stone.infra.opensearch;
 
-import org.opensearch.index.query.BoolQueryBuilder;
-import org.opensearch.index.query.QueryBuilders;
-import org.opensearch.search.aggregations.AggregationBuilders;
-import org.opensearch.search.aggregations.bucket.terms.ParsedStringTerms;
-import org.opensearch.search.builder.SearchSourceBuilder;
+import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.opensearch._types.aggregations.Aggregation;
+import org.opensearch.client.opensearch._types.aggregations.StringTermsAggregate;
+import org.opensearch.client.opensearch._types.aggregations.StringTermsBucket;
+import org.opensearch.client.opensearch._types.query_dsl.BoolQuery;
+import org.opensearch.client.opensearch._types.query_dsl.ExistsQuery;
+import org.opensearch.client.opensearch._types.query_dsl.Query;
+import org.opensearch.client.opensearch.core.SearchRequest;
+import org.opensearch.client.opensearch.core.SearchResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import com.cap.stone.service.OpenSearchClientService;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 @Service
 public class SessionQueryService {
     
     @Autowired
-    private OpenSearchClientService clientService;
+    private OpenSearchClient client;
     
     private static final String SID_FIELD = "extended.sid";
     private static final String COMMUNITY_ID_FIELD = "network.community_id.keyword";
@@ -35,15 +38,22 @@ public class SessionQueryService {
             String indexPattern = buildIndexPattern(currentDate);
             
             try {
-                BoolQueryBuilder sidQuery = QueryBuilders.boolQuery()
-                    .must(QueryBuilders.existsQuery(SID_FIELD));
+                Query sidQuery = Query.of(q -> q.bool(BoolQuery.of(b -> b
+                    .must(Query.of(mq -> mq.exists(ExistsQuery.of(e -> e.field(SID_FIELD)))))
+                )));
                 
-                SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
+                SearchRequest searchRequest = SearchRequest.of(s -> s
+                    .index(indexPattern)
                     .query(sidQuery)
-                    .size(0);
+                    .size(0)
+                );
                 
-                var response = clientService.executeSearch(indexPattern, sourceBuilder);
-                totalCount += (int) response.getHits().getTotalHits().value();
+                
+                @SuppressWarnings("unchecked")
+                Class<Map<String, Object>> mapClass = (Class<Map<String, Object>>) (Class<?>) Map.class;
+                
+                SearchResponse<Map<String, Object>> response = client.search(searchRequest, mapClass);
+                totalCount += (int) response.hits().total().value();
                 
             } catch (Exception e) {
                 System.out.println("No data found for index " + indexPattern + ": " + e.getMessage());
@@ -65,23 +75,33 @@ public class SessionQueryService {
             String indexPattern = buildIndexPattern(currentDate);
             
             try {
-                BoolQueryBuilder sidQuery = QueryBuilders.boolQuery()
-                    .must(QueryBuilders.existsQuery(SID_FIELD));
+                Query sidQuery = Query.of(q -> q.bool(BoolQuery.of(b -> b
+                    .must(Query.of(mq -> mq.exists(ExistsQuery.of(e -> e.field(SID_FIELD)))))
+                )));
                 
-                SearchSourceBuilder sourceBuilder = new SearchSourceBuilder()
+                SearchRequest searchRequest = SearchRequest.of(s -> s
+                    .index(indexPattern)
                     .query(sidQuery)
-                    .aggregation(AggregationBuilders.terms("community_ids")
-                        .field(COMMUNITY_ID_FIELD)
-                        .size(10000))
-                    .size(0);
+                    .aggregations("community_ids", Aggregation.of(a -> a
+                        .terms(t -> t.field(COMMUNITY_ID_FIELD).size(10000))
+                    ))
+                    .size(0)
+                );
                 
-                var response = clientService.executeSearch(indexPattern, sourceBuilder);
                 
-                if (response.getAggregations() != null) {
-                    ParsedStringTerms communityTerms = response.getAggregations().get("community_ids");
-                    communityTerms.getBuckets().forEach(bucket -> {
-                        uniqueCommunityIds.add(bucket.getKeyAsString());
-                    });
+                @SuppressWarnings("unchecked")
+                Class<Map<String, Object>> mapClass = (Class<Map<String, Object>>) (Class<?>) Map.class;
+                
+                SearchResponse<Map<String, Object>> response = client.search(searchRequest, mapClass);
+                
+                if (response.aggregations() != null) {
+                    StringTermsAggregate communityTerms = response.aggregations()
+                        .get("community_ids")
+                        .sterms();
+                    
+                    for (StringTermsBucket bucket : communityTerms.buckets().array()) {
+                        uniqueCommunityIds.add(bucket.key());
+                    }
                 }
                 
             } catch (Exception e) {

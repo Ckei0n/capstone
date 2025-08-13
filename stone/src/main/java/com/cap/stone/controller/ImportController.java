@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.cap.stone.service.OpenSearchService;
+import com.cap.stone.service.ImportService;
 import com.cap.stone.util.GzipJsonReader;
 
 import java.io.InputStream;
@@ -24,7 +24,7 @@ public class ImportController {
     
     private static final Logger logger = LoggerFactory.getLogger(ImportController.class);
     @Autowired
-    private OpenSearchService openSearchService;
+    private ImportService importService;
     
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> importGzipJson(@RequestParam("files") MultipartFile[] files) {
@@ -34,7 +34,7 @@ public class ImportController {
         for (MultipartFile file : files) {
             try (InputStream inputStream = new GZIPInputStream(file.getInputStream())) {
                 List<Map<String, Object>> documents = GzipJsonReader.readGzipJsonStream(inputStream);
-                Map<String, Integer> fileCounts = openSearchService.indexDocumentsByIndex(documents);
+                Map<String, Integer> fileCounts = importService.indexDocumentsByIndex(documents);
                 
                 // Merge counts from this file
                 fileCounts.forEach((index, count) -> 

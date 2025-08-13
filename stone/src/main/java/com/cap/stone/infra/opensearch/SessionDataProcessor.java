@@ -1,6 +1,6 @@
 package com.cap.stone.infra.opensearch;
 
-import org.opensearch.search.SearchHit;
+import org.opensearch.client.opensearch.core.search.Hit;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -11,15 +11,13 @@ public class SessionDataProcessor {
     
     private static final String TIMESTAMP_FIELD = "@timestamp";
     
-    public Map<String, Object> processHit(SearchHit hit) {
-        Map<String, Object> session = hit.getSourceAsMap();
-        session.put("_index", hit.getIndex());
-        session.put("_id", hit.getId());
+    public Map<String, Object> processHit(Hit<Map<String, Object>> hit) {
+        Map<String, Object> session = hit.source();
         
         Map<String, Object> processed = new HashMap<>();
         processed.put("timestamp", session.get(TIMESTAMP_FIELD));
-        processed.put("indexName", session.get("_index"));
-        processed.put("documentId", session.get("_id"));
+        processed.put("indexName", hit.index());
+        processed.put("documentId", hit.id());
         processed.put("communityId", getNestedValue(session, "network", "community_id"));
         processed.put("sid", getNestedValue(session, "extended", "sid"));
         processed.put("session", session.get("session"));

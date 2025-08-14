@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import './UploadPage.css';
 
 const UploadPage = () => {
+    //// State management
     const [files, setFiles] = useState([]);
     const [progress, setProgress] = useState(0);
     const [message, setMessage] = useState("");
@@ -14,10 +15,11 @@ const UploadPage = () => {
     useEffect(() => {
         const fetchCsrfToken = async () => {
         try {
+            // Request CSRF token from server
             const response = await axios.get('/api/csrf', {
-            withCredentials: true
+            withCredentials: true //include cookies in request
             });
-            setCsrfToken(response.data);
+            setCsrfToken(response.data); // Store token in state for later use
         } catch (error) {
             console.error('Failed to fetch CSRF token:', error);
             setMessage("Failed to initialize security token");
@@ -25,10 +27,11 @@ const UploadPage = () => {
         };
 
         fetchCsrfToken();
-    }, []);
+    }, []); // Empty dependency array = run once on mount
 
+    //Triggered when user selects files via file input, Updates component state with selected files
     const handleFileChange = (e) => {
-        setFiles(e.target.files);
+        setFiles(e.target.files); //FileList object
     };
 
     const handleUpload = async () => {
@@ -37,19 +40,19 @@ const UploadPage = () => {
         return;
     }
         const formData = new FormData();
-        for (let i = 0; i < files.length; i++) {
+        for (let i = 0; i < files.length; i++) { // Add all selected files to form data, Server expects files under "files" field name
             formData.append("files", files[i]);
         }
 
         try {
             const response = await axios.post("/api/import", formData, {
                 headers: {
-                    "Content-Type": "multipart/form-data",
-                    [csrfToken.headerName]: csrfToken.token
+                    "Content-Type": "multipart/form-data", // Set content type for file uploads
+                    [csrfToken.headerName]: csrfToken.token // // Include CSRF token in header, header name comes from server
                 },
-                withCredentials: true, // Important for cookies
+                withCredentials: true, // Include cookies for session management
                 onUploadProgress: (progressEvent) => {
-                    const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                    const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total); // Calculate percentage: (bytes uploaded / total bytes) * 100
                     setProgress(percent);
                 },
             });

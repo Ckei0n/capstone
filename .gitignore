@@ -8,6 +8,8 @@ application-local.properties
 secrets/
 *.key
 *.pem
+*.crt
+*.pfx
 .dockerignore
 
 # === IDE & EDITOR ===

@@ -12,6 +12,8 @@ services:
       - KEYCLOAK_AUTH_URI=${KEYCLOAK_AUTH_URI}
       - KEYCLOAK_TOKEN_URI=${KEYCLOAK_TOKEN_URI}
       - KEYCLOAK_JWK_URI=${KEYCLOAK_JWK_URI}
+      - OPENSEARCH_USERNAME=${OPENSEARCH_USERNAME}
+      - OPENSEARCH_PASSWORD=${OPENSEARCH_PASSWORD}
     depends_on:
       opensearch-node1:
         condition: service_started
@@ -91,7 +93,17 @@ services:
       - cluster.initial_cluster_manager_nodes=opensearch-node1
       - bootstrap.memory_lock=true
       - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
-      - "DISABLE_SECURITY_PLUGIN=true"
+      - "OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_ADMIN_PASSWORD}"
+      - "plugins.security.ssl.transport.enabled=true"
+      - "plugins.security.ssl.http.enabled=true"
+      - "plugins.security.disabled=false"
+      - "plugins.security.allow_default_init_securityindex=true"
+      - "plugins.security.allow_unsafe_democertificates=true"
+      - "plugins.security.authcz.admin_dn=CN=kirk,OU=client,O=client,L=test,C=de"
+      - "plugins.security.nodes_dn=CN=opensearch-node1,OU=SSL,O=Test,L=Test,C=DE"
+      - plugins.security.restapi.roles_enabled
+      - plugins.security.system_indices.enabled=true
+      - plugins.security.audit.type=internal_opensearch
     ulimits:
       memlock:
         soft: -1
@@ -103,6 +115,7 @@ services:
       - opensearch-data1:/usr/share/opensearch/data
     expose:
       - "9200"
+      - "9600"
     networks:
       - opensearch-net
 
@@ -112,10 +125,18 @@ services:
     expose:
       - "5601"
     environment:
-      - 'OPENSEARCH_HOSTS=["http://opensearch-node1:9200"]'
-      - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true"
+      - 'OPENSEARCH_HOSTS=["https://opensearch-node1:9200"]'
+      - "OPENSEARCH_USERNAME=${OPENSEARCH_USERNAME}"
+      - "OPENSEARCH_PASSWORD=${OPENSEARCH_PASSWORD}"
       - "SERVER_BASEPATH=/opensearch"
       - "SERVER_REWRITEBASEPATH=true"
+      - "opensearch_security.multitenancy.enabled=false"
+      - "opensearch_security.readonly_mode.roles=kibana_read_only"
+      - "server.ssl.enabled=true"
+      - "opensearch.ssl.verificationMode=none"
+      - "opensearch_security.cookie.secure=false"
+      - "opensearch.requestHeadersWhitelist=[authorization, securitytenant]"
+      - "opensearch_security.auth.type=basicauth"
     depends_on:
        opensearch-node1:
         condition: service_started

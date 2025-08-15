@@ -28,7 +28,6 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/assets/**", "/static/**", "/favicon.ico", "/api/csrf").permitAll()
-                .requestMatchers("/opensearch/**").hasAuthority("admin")
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2

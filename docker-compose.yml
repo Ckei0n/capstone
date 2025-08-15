@@ -48,7 +48,8 @@ services:
       - KC_HOSTNAME_STRICT=false
       - KC_HOSTNAME_STRICT_HTTPS=false
       - KC_HTTP_ENABLED=true
-      - KC_FRONTEND_URL=http://localhost
+      - KC_PROXY=edge
+      - KC_SPI_COOKIE_SAME_SITE=Lax
 
     command: start-dev
     depends_on:

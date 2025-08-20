@@ -43,7 +43,6 @@ public class SessionAnalyticsService {
         
         // Tracking across all days
         Set<String> globalUniqueCommunityIds = new HashSet<>();
-        Set<Long> globalUniqueSids = new HashSet<>();
         int totalHits = 0;
         
         // Query each day individually
@@ -91,7 +90,6 @@ public class SessionAnalyticsService {
                         if (sidObj != null) {
                             List<Long> sids = dataProcessor.extractSids(sidObj);
                             group.addSids(sids);
-                            globalUniqueSids.addAll(sids);
                         }
                     }
                 }
@@ -110,9 +108,7 @@ public class SessionAnalyticsService {
         return new SessionAnalytics(
             dailyData, 
             totalHits, 
-            globalUniqueCommunityIds.size(),
-            globalUniqueCommunityIds,
-            globalUniqueSids
+            globalUniqueCommunityIds.size()
         );
     }
     

@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -55,6 +56,43 @@ public class SessionController {
             response.put("error", "Invalid date format. Use YYYY-MM-DD");
         } catch (IOException e) {
             response.put("error", "Error fetching data");
+        }
+        return response;
+    }
+
+    
+    //Retrieves all session data for a specific day.
+    @GetMapping("/sessions/daily-details")
+    public Object getDailySessionDetails(@RequestParam String start,
+                                       @RequestParam String end,
+                                       @RequestParam String date) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            // Parse and validate dates
+            LocalDate startDate = LocalDate.parse(start);
+            LocalDate endDate = LocalDate.parse(end);
+            LocalDate targetDate = LocalDate.parse(date);
+            
+            // Validate that target date is within the specified range
+            if (targetDate.isBefore(startDate) || targetDate.isAfter(endDate)) {
+                response.put("error", "Target date must be within the specified date range");
+                return response;
+            }
+            
+            // Get session details for the specific day
+            List<Map<String, Object>> sessions = sessionAnalyticsService.getSessionsForSpecificDay(date);
+            
+            response.put("sessions", sessions);
+            response.put("date", date);
+            response.put("totalSessions", sessions.size());
+            
+            return response;
+            
+        } catch (DateTimeParseException e) {
+            response.put("error", "Invalid date format. Use YYYY-MM-DD");
+        } catch (IOException e) {
+            response.put("error", "Error fetching session details");
         }
         return response;
     }

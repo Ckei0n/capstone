@@ -4,7 +4,7 @@ package com.cap.stone.controller;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
-//Serves the frontend single-page application (SPA) 
+//Serves the react static files
 @Controller
 public class WebController {
     

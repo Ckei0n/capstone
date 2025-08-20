@@ -9,6 +9,7 @@ import org.opensearch.client.opensearch.core.search.Hit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.cap.stone.infra.opensearch.model.SessionAnalytics;
 import com.cap.stone.infra.opensearch.model.SessionGroup;
 import com.cap.stone.service.OpenSearchClientService;
 
@@ -20,7 +21,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
-public class SessionDataService {
+public class SessionAnalyticsService {
     
     @Autowired
     private OpenSearchClientService clientService;
@@ -32,28 +33,38 @@ public class SessionDataService {
     private static final String TIMESTAMP_FIELD = "@timestamp";
     private static final ZoneId SINGAPORE_ZONE = ZoneId.of("Asia/Singapore");
     
-    public Map<String, Object> getDailyTimeseriesData(String startDate, String endDate) throws IOException {
+     //method to get daily data, count sid hits and count unique network sessions
+    public SessionAnalytics getSessionAnalytics(String startDate, String endDate) throws IOException {
         LocalDate start = LocalDate.parse(startDate);
         LocalDate end = LocalDate.parse(endDate);
         
+        // Use LinkedHashMap to preserve chronological order
         Map<String, SessionGroup> singaporeDateGroups = new LinkedHashMap<>();
         
+        // Tracking across all days
+        Set<String> globalUniqueCommunityIds = new HashSet<>();
+        Set<Long> globalUniqueSids = new HashSet<>();
+        int totalHits = 0;
+        
+        // Query each day individually
         LocalDate currentDate = start;
         while (!currentDate.isAfter(end)) {
             String indexPattern = buildIndexPattern(currentDate);
             
             try {
+                // Query for documents with sid field
                 Query sidQuery = Query.of(q -> q.bool(BoolQuery.of(b -> b
                     .must(Query.of(mq -> mq.exists(ExistsQuery.of(e -> e.field(SID_FIELD)))))
                 )));
                 
+                // search with field filtering and sorting
                 SearchResponse<Map<String, Object>> response = clientService.executeSearch(
                     indexPattern, 
                     sidQuery, 
-                    10000, 
-                    dataProcessor.getDetailedFields(),
-                    TIMESTAMP_FIELD,
-                    SortOrder.Desc
+                    1000,                          // Max results per day
+                    dataProcessor.getDetailedFields(), // Only fetch required fields
+                    TIMESTAMP_FIELD,                   // Sort by timestamp
+                    SortOrder.Desc                     // Most recent first
                 );
                 
                 List<Hit<Map<String, Object>>> hits = response.hits().hits();
@@ -62,37 +73,55 @@ public class SessionDataService {
                     String singaporeDate = currentDate.toString();
                     SessionGroup group = singaporeDateGroups.computeIfAbsent(singaporeDate, SessionGroup::new);
                     
+                    // Process each session hit and accumulate global stats
                     for (Hit<Map<String, Object>> hit : hits) {
                         Map<String, Object> processedSession = dataProcessor.processHit(hit);
                         group.addSession(processedSession);
+                        totalHits++;
                         
+                        // Extract and track sid and community ID
                         String communityId = (String) processedSession.get("communityId");
                         Object sidObj = processedSession.get("sid");
                         
                         if (communityId != null) {
                             group.addCommunityIds(List.of(communityId));
+                            globalUniqueCommunityIds.add(communityId);
                         }
                         
                         if (sidObj != null) {
-                            group.addSids(dataProcessor.extractSids(sidObj));
+                            List<Long> sids = dataProcessor.extractSids(sidObj);
+                            group.addSids(sids);
+                            globalUniqueSids.addAll(sids);
                         }
                     }
                 }
                 
             } catch (Exception e) {
+                // Log but continue, some days may not have data
                 System.out.println("No data found for index " + indexPattern + ": " + e.getMessage());
             }
             
             currentDate = currentDate.plusDays(1);
         }
         
-        return buildDailyDataResult(singaporeDateGroups);
+        // Build daily data for timeseries visualization
+        List<Map<String, Object>> dailyData = buildDailyDataList(singaporeDateGroups);
+        
+        return new SessionAnalytics(
+            dailyData, 
+            totalHits, 
+            globalUniqueCommunityIds.size(),
+            globalUniqueCommunityIds,
+            globalUniqueSids
+        );
     }
     
+    // Retrieves all network sessions with snort sids for a specific day.
     public List<Map<String, Object>> getSessionsForSpecificDay(String date) throws IOException {
         LocalDate localDate = LocalDate.parse(date);
         String indexPattern = buildIndexPattern(localDate);
         
+        // Query for all sessions with sids
         Query sidQuery = Query.of(q -> q.bool(BoolQuery.of(b -> b
             .must(Query.of(mq -> mq.exists(ExistsQuery.of(e -> e.field(SID_FIELD)))))
         )));
@@ -100,12 +129,13 @@ public class SessionDataService {
         SearchResponse<Map<String, Object>> response = clientService.executeSearch(
             indexPattern, 
             sidQuery, 
-            10000, 
+            1000,                       
             dataProcessor.getDetailedFields(),
             TIMESTAMP_FIELD,
             SortOrder.Desc
         );
         
+        // Process all hits into session objects
         List<Map<String, Object>> sessions = new ArrayList<>();
         for (Hit<Map<String, Object>> hit : response.hits().hits()) {
             sessions.add(dataProcessor.processHit(hit));
@@ -113,42 +143,39 @@ public class SessionDataService {
         
         return sessions;
     }
-    
+
+     // Builds the OpenSearch index pattern for a specific date.
     private String buildIndexPattern(LocalDate date) {
         String indexSuffix = date.format(DateTimeFormatter.ofPattern("yyMMdd"));
         return "arkime_sessions*-" + indexSuffix;
     }
     
-    private Map<String, Object> buildDailyDataResult(Map<String, SessionGroup> singaporeDateGroups) {
+    // Transforms grouped session data into the daily data list for timeseries visualization. Creates data points with aggregated statsfor each day.
+    private List<Map<String, Object>> buildDailyDataList(Map<String, SessionGroup> singaporeDateGroups) {
         List<Map<String, Object>> dailyData = new ArrayList<>();
-        int totalHits = 0;
         
         for (SessionGroup group : singaporeDateGroups.values()) {
             LocalDate localDate = LocalDate.parse(group.getDate());
             ZonedDateTime singaporeStartOfDay = localDate.atStartOfDay(SINGAPORE_ZONE);
-            long timestampMs = singaporeStartOfDay.toInstant().toEpochMilli();
+            long timestampMs = singaporeStartOfDay.toInstant().toEpochMilli(); // For d3.js
             
             Map<String, Integer> communityIdHitCounts = group.getCommunityIdHitCounts();
             
+            // Build data point for this day
             Map<String, Object> dayData = new HashMap<>();
             dayData.put("date", group.getDate());
-            dayData.put("timestamp", timestampMs);
-            dayData.put("singaporeDate", group.getDate());
-            dayData.put("hitCount", group.getSessionCount());
-            dayData.put("communityIds", group.getUniqueCommunityIds());
-            dayData.put("communityIdHitCounts", communityIdHitCounts);
-            dayData.put("sids", group.getUniqueSids());
-            dayData.put("sampleSessions", group.getSampleSessions(100));
-            dayData.put("hasMoreSessions", group.hasMoreSessionsThan(100));
+            dayData.put("timestamp", timestampMs);                    // Unix timestamp for charts
+            dayData.put("singaporeDate", group.getDate());            // Human-readable date
+            dayData.put("hitCount", group.getSessionCount());         // Total sessions
+            dayData.put("communityIds", group.getUniqueCommunityIds()); // Unique network sessions
+            dayData.put("communityIdHitCounts", communityIdHitCounts); // count appearance of community id per network session
+            dayData.put("sids", group.getUniqueSids());               // Unique sids
+            dayData.put("sampleSessions", group.getSampleSessions(100)); // Sample data
+            dayData.put("hasMoreSessions", group.hasMoreSessionsThan(100)); // Pagination
             
             dailyData.add(dayData);
-            totalHits += group.getSessionCount();
         }
         
-        Map<String, Object> result = new HashMap<>();
-        result.put("dailyData", dailyData);
-        result.put("totalHits", totalHits);
-        
-        return result;
+        return dailyData;
     }
 }

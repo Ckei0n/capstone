@@ -2,9 +2,9 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, K-On ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, develop, K-On]
 
 permissions:
   contents: read 
@@ -38,7 +38,6 @@ jobs:
 
     - name: Run tests
       run: npm test
-      continue-on-error: true
 
     - name: Build application
       run: npm run build
@@ -87,13 +86,6 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
-    - name: Cache Maven dependencies
-      uses: actions/cache@v4
-      with:
-        path: ~/.m2
-        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-        restore-keys: ${{ runner.os }}-m2
-
     - name: Wait for OpenSearch
       run: |
         echo "Waiting for OpenSearch..."
@@ -102,28 +94,9 @@ jobs:
 
     - name: Run unit tests
       run: ./mvnw test
-      
-    - name: Generate test report
-      uses: dorny/test-reporter@v1
-      if: success() || failure()  
-      with:
-        name: Maven Tests
-        path: stone/target/surefire-reports/*.xml
-        reporter: java-junit
-        fail-on-error: true
-        
-    - name: Upload test results
-      uses: actions/upload-artifact@v4
-      if: always()  
-      with:
-        name: test-results
-        path: |
-          stone/target/surefire-reports/
-          stone/target/failsafe-reports/
           
     - name: Build application
       run: ./mvnw clean package -DskipTests
-      if: success()  
       
     - name: Upload JAR artifact
       uses: actions/upload-artifact@v4

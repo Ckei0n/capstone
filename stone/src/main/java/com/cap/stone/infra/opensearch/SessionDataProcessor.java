@@ -12,7 +12,7 @@ public class SessionDataProcessor {
     private static final String TIMESTAMP_FIELD = "@timestamp";
     
     public Map<String, Object> processHit(Hit<Map<String, Object>> hit) {
-        Map<String, Object> session = hit.source();
+        Map<String, Object> session = hit.source(); //raw opensearch hit data
         
         Map<String, Object> processed = new HashMap<>();
         processed.put("timestamp", session.get(TIMESTAMP_FIELD));

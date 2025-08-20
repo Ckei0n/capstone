@@ -11,6 +11,8 @@ secrets/
 *.crt
 *.pfx
 .dockerignore
+*.p12
+*.env.json
 
 # === IDE & EDITOR ===
 .vscode/
@@ -24,3 +26,4 @@ secrets/
 *.swp
 *.swo
 *~
+node_modules/

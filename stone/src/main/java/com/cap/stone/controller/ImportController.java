@@ -18,25 +18,31 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
+//  Handles file upload and bulk import of compressed JSON data into OpenSearch indices.
 @RestController
 @RequestMapping("/api/import")
 public class ImportController {
     
-    private static final Logger logger = LoggerFactory.getLogger(ImportController.class);
+    private static final Logger logger = LoggerFactory.getLogger(ImportController.class); //log errors or messages
+
     @Autowired
     private ImportService importService;
     
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE) //accepts mutiple file uploads
     public ResponseEntity<String> importGzipJson(@RequestParam("files") MultipartFile[] files) {
         int totalImported = 0;
-        Map<String, Integer> indexCounts = new HashMap<>();
+        Map<String, Integer> indexCounts = new HashMap<>(); // Track documents per index
         
+        // Process each uploaded file
         for (MultipartFile file : files) {
             try (InputStream inputStream = new GZIPInputStream(file.getInputStream())) {
+                // Decompress and parse JSON documents from the gzipped file
                 List<Map<String, Object>> documents = GzipJsonReader.readGzipJsonStream(inputStream);
+
+                // Import documents and get count per index
                 Map<String, Integer> fileCounts = importService.indexDocumentsByIndex(documents);
                 
-                // Merge counts from this file
+                // Merge counts from this file into total counts
                 fileCounts.forEach((index, count) -> 
                     indexCounts.merge(index, count, Integer::sum)
                 );
@@ -49,11 +55,12 @@ public class ImportController {
 }
         }
         
-        // Build response message
+        // Build response message with import stats
         StringBuilder responseMsg = new StringBuilder();
         responseMsg.append("Successfully imported ").append(totalImported).append(" documents from ")
                    .append(files.length).append(" file(s) into ").append(indexCounts.size()).append(" indices:\n");
         
+        //per-index breakdown
         indexCounts.forEach((index, count) -> 
             responseMsg.append("- ").append(index).append(": ").append(count).append(" documents\n")
         );

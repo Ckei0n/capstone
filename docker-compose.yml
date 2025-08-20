@@ -1,5 +1,5 @@
 services:
-  # === Combined App (React + Spring Boot) ===
+  # === (React + Spring Boot) ===
   app:
     build:
       context: .
@@ -14,6 +14,9 @@ services:
       - KEYCLOAK_JWK_URI=${KEYCLOAK_JWK_URI}
       - OPENSEARCH_USERNAME=${OPENSEARCH_USERNAME}
       - OPENSEARCH_PASSWORD=${OPENSEARCH_PASSWORD}
+      - SSL_KEYSTORE_PASSWORD=${SSL_KEYSTORE_PASSWORD}
+    volumes:
+      - ./ssl/unified.p12:/etc/ssl/app-keystore.p12:ro
     depends_on:
       opensearch-node1:
         condition: service_started
@@ -31,8 +34,8 @@ services:
       - "443:443"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./ssl/app.onik.crt:/etc/ssl/certs/app.onik.crt
-      - ./ssl/app.onik.key:/etc/ssl/private/app.onik.key
+      - ./ssl/unified.crt:/etc/ssl/certs/app.onik.crt:ro
+      - ./ssl/unified.key:/etc/ssl/private/app.onik.key:ro
     depends_on:
       app:
         condition: service_started
@@ -53,10 +56,17 @@ services:
       - KC_HOSTNAME_STRICT=false
       - KC_HOSTNAME_STRICT_HTTPS=false
       - KC_PROXY=edge
-      - KC_HTTP_ENABLED=true
+      - KC_HTTPS_CERTIFICATE_FILE=/opt/keycloak/conf/keycloak.crt
+      - KC_HTTPS_CERTIFICATE_KEY_FILE=/opt/keycloak/conf/keycloak.key
+      - KC_HTTPS_PORT=8443
+      - KC_HTTP_ENABLED=false
+    volumes:
+      - ./ssl/unified.crt:/opt/keycloak/conf/keycloak.crt:ro
+      - ./ssl/unified.key:/opt/keycloak/conf/keycloak.key:ro
  
-
     command: start-dev
+    expose:
+      - "8443"
     depends_on:
       keycloak-db:
         condition: service_started
@@ -99,7 +109,6 @@ services:
       - "plugins.security.disabled=false"
       - "plugins.security.allow_default_init_securityindex=true"
       - "plugins.security.allow_unsafe_democertificates=true"
-      - "plugins.security.authcz.admin_dn=CN=kirk,OU=client,O=client,L=test,C=de"
       - "plugins.security.nodes_dn=CN=opensearch-node1,OU=SSL,O=Test,L=Test,C=DE"
       - plugins.security.restapi.roles_enabled
       - plugins.security.system_indices.enabled=true
@@ -130,8 +139,6 @@ services:
       - "OPENSEARCH_PASSWORD=${OPENSEARCH_PASSWORD}"
       - "SERVER_BASEPATH=/opensearch"
       - "SERVER_REWRITEBASEPATH=true"
-      - "opensearch_security.multitenancy.enabled=false"
-      - "opensearch_security.readonly_mode.roles=kibana_read_only"
       - "server.ssl.enabled=true"
       - "opensearch.ssl.verificationMode=none"
       - "opensearch_security.cookie.secure=false"

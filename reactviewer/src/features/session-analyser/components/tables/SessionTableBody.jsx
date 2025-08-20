@@ -30,8 +30,8 @@ const SessionTableBody = ({ sessions, totalAvailable }) => {
   }
 
   return (
-    <div className="table-container">
-      <table className="session-details-table">
+    <div className="table-container" data-cy="table-container">
+      <table className="session-details-table" data-cy="session-details-table">
         <thead>
           <tr>
             <th>Timestamp</th>
@@ -43,9 +43,9 @@ const SessionTableBody = ({ sessions, totalAvailable }) => {
             <th>Message</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody data-cy="session-table-body">
           {sessions.map((session, index) => (
-            <tr key={session.documentId || index}>
+            <tr key={session.documentId || index} data-cy={`session-row-${index}`}>
               <td>{formatTimestamp(session.timestamp)}</td>
               <td className="index-cell">{session.indexName}</td>
               <td className="community-id-cell">{session.communityId || 'N/A'}</td>

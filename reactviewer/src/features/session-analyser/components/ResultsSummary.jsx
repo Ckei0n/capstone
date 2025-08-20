@@ -11,7 +11,7 @@ const ResultsSummary = ({ results }) => {
     <div className="results-summary">
       <h2>Results Summary</h2>
       <p><strong>Total Number of Unique Sessions:</strong> {results.totalUniqueSessions}</p>
-      <p><strong>Snort SID Hits:</strong> {results.snortHits}</p>
+      <p><strong>Snort SID Hits:</strong> {results.totalSnortHits}</p>
     </div>
   );
 };

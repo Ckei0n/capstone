@@ -5,13 +5,16 @@ This application implements a SPA (single page app) to allow users to import GZI
 # **Requirements**
 
 Delivery 1:  
-develop a tool that reads the NEMOS network logs, and insert the data into Opensearch.
+develop a tool that reads the NEMOS network logs, and insert the data into Opensearch.  
+
 Delivery 2:  
-write a simple SPA (single page app) that displays the summary of the network logs found in the Opensearch. This SPA dashboard should: allow user to specify a date range of interest; show the number of total sessions; show the number of hits (i.e. with snort sid)
+write a simple SPA (single page app) that displays the summary of the network logs found in the Opensearch. This SPA dashboard should: allow user to specify a date range of interest; show the number of total sessions; show the number of hits (i.e. with snort sid)  
+
 Bonus 1:  
-Secure the SPA with basic authentication or keycloak using spring security
+Secure the SPA with basic authentication or keycloak using spring security  
+
 Bonus 2:  
-Able to use javascript library (e.g. D3.js) to give visual display (line, pie chart, heat map, visual alerts) of example snort hits over time
+Able to use javascript library (e.g. D3.js) to give visual display (line, pie chart, heat map, visual alerts) of example snort hits over time  
 
 (Internal)
 1) have proper documentation

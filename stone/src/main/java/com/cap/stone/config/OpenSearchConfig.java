@@ -20,12 +20,13 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OpenSearchConfig {
 
+    // Creates and configures an OpenSearch client bean for connecting to the OpenSearch cluster.
     @Bean
     public OpenSearchClient openSearchClient() {
         try {
             final HttpHost httpHost = new HttpHost("https", "opensearch-node1", 9200);
             
-            // Create credentials provider
+            // Configure basic authentication credentials
             final BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
             credentialsProvider.setCredentials(
                 new AuthScope(httpHost), 
@@ -38,9 +39,10 @@ public class OpenSearchConfig {
                 .loadTrustMaterial(null, (chains, authType) -> true)
                 .build();
 
-            // Build the transport
+            // Build the HTTP transport layer
             final ApacheHttpClient5TransportBuilder builder = ApacheHttpClient5TransportBuilder.builder(httpHost);
             
+            // Configure HTTP client with SSL and credentials
             builder.setHttpClientConfigCallback(httpClientBuilder -> {
                     // Create connection manager with SSL context
                     final AsyncClientConnectionManager connectionManager = PoolingAsyncClientConnectionManagerBuilder
@@ -51,6 +53,7 @@ public class OpenSearchConfig {
                             .buildAsync())
                         .build();
 
+                    // Apply credentials and connection manager to HTTP client
                     httpClientBuilder
                         .setDefaultCredentialsProvider(credentialsProvider)
                         .setConnectionManager(connectionManager);
@@ -65,6 +68,7 @@ public class OpenSearchConfig {
                     .setResponseTimeout(Timeout.ofMilliseconds(60000))
             );
 
+            // Build final transport and create OpenSearch client
             final OpenSearchTransport transport = builder.build();
             return new OpenSearchClient(transport);
 

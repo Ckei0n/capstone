@@ -23,7 +23,7 @@ const SessionTableHeader = ({
   };
 
   return (
-    <div className="session-details-header">
+    <div className="session-details-header" data-cy="session-details-header">
       <h3>
         Session Details for {selectedDate}
         {selectedCommunityId && (
@@ -42,6 +42,7 @@ const SessionTableHeader = ({
             onClick={onLoadAll} 
             disabled={loading}
             className="load-all-btn btn-sm"
+            data-cy="load-all-btn"
           >
             {loading ? 'Loading...' : 
               selectedCommunityId 
@@ -54,6 +55,7 @@ const SessionTableHeader = ({
           onClick={onClose} 
           className="close-btn"
           aria-label="Close session details"
+          data-cy="close-btn"
         >
           ×
         </button>

@@ -15,6 +15,8 @@ import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.Map;
 
+
+// REST API endpoints for querying network session data
 @RestController
 @RequestMapping("/api")
 public class SessionController {
@@ -45,12 +47,15 @@ public class SessionController {
                 return response;
             }
             
+            // // Query unique sessions count
             int totalUniqueSessions = sessionQueryService.countUniqueCommunityIdsByDateRange(start, end);
             response.put("totalUniqueSessions", totalUniqueSessions);
             
+            // Query Snort IDS alerts count
             int snortHits = sessionQueryService.countSnortHitsByDateRange(start, end);
             response.put("snortHits", snortHits);
             
+            // Get daily time-series data for visualization
             Map<String, Object> timeseriesResult = sessionDataService.getDailyTimeseriesData(start, end);
             response.put("timeseriesData", timeseriesResult.get("dailyData"));
             response.put("totalHitsInRange", timeseriesResult.get("totalHits"));

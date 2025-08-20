@@ -28,7 +28,7 @@ const SessionDetailsTable = ({
   const totalSessions = selectedDay.hitCount || 0;
 
   return (
-    <div className="session-details-container">
+    <div className="session-details-container" data-cy="session-details-container">
       <SessionTableHeader
         selectedDate={selectedDay.date}
         sessionCount={sessions.length}
@@ -42,7 +42,7 @@ const SessionDetailsTable = ({
         selectedCommunityId={selectedDay.selectedCommunityId}
       />
 
-      {error && <div className="error">{error}</div>}
+      {error && <div className="error" data-cy="session-error">{error}</div>}
 
       <SessionTableBody
         sessions={sessions}

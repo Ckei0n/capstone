@@ -25,6 +25,16 @@ RUN chmod +x ./mvnw && ./mvnw clean package -DskipTests
 FROM openjdk:21-jdk-slim
 WORKDIR /app
 
+# Import cert
+COPY ssl/unified.crt /tmp/unified.crt
+
+# Import cert into the Java truststore
+RUN keytool -import -trustcacerts -keystore $JAVA_HOME/lib/security/cacerts \
+    -storepass changeit -alias unified-cert -file /tmp/unified.crt -noprompt
+
+# Clean up the certificate file
+RUN rm /tmp/unified.crt
+
 # Copy the built JAR file (contains static files)
 COPY --from=spring-build /app/target/*.jar app.jar
 

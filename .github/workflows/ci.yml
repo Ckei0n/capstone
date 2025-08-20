@@ -132,8 +132,6 @@ jobs:
         name: spring-boot-jar
         path: stone/target/*.jar
 
-  # Integration Test
-
   # Security and Code Quality
   security:
     runs-on: ubuntu-latest

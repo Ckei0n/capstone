@@ -1,7 +1,7 @@
 package com.cap.stone.controller;
 
-import com.cap.stone.infra.opensearch.SessionDataService;
-import com.cap.stone.infra.opensearch.SessionQueryService;
+import com.cap.stone.infra.opensearch.SessionAnalyticsService;
+import com.cap.stone.infra.opensearch.model.SessionAnalytics;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,43 +22,34 @@ import java.util.Map;
 public class SessionController {
     
     @Autowired
-    private SessionQueryService sessionQueryService;
+    private SessionAnalyticsService sessionAnalyticsService;
     
-    @Autowired
-    private SessionDataService sessionDataService;
-    
+    // Retrieves network sessions for a specified date range.
     @GetMapping("/sessions")
     public Object getSessions(@RequestParam String start,
                              @RequestParam String end) {
         Map<String, Object> response = new HashMap<>();
         
         try {
-            
+            // Parse and validate dates
             LocalDate startDate = LocalDate.parse(start);
             LocalDate endDate = LocalDate.parse(end);
             
+            // validation for dates
             if (startDate.isAfter(endDate)) {
                 response.put("error", "Start date cannot be after end date");
                 return response;
             }
             
+            // Prevent large queries that could impact performance
             if (startDate.plusYears(1).isBefore(endDate)) {
                 response.put("error", "Date range too large (max 1 year)");
                 return response;
             }
             
-            // // Query unique sessions count
-            int totalUniqueSessions = sessionQueryService.countUniqueCommunityIdsByDateRange(start, end);
-            response.put("totalUniqueSessions", totalUniqueSessions);
+            SessionAnalytics analytics = sessionAnalyticsService.getSessionAnalytics(start, end);
             
-            // Query Snort IDS alerts count
-            int snortHits = sessionQueryService.countSnortHitsByDateRange(start, end);
-            response.put("snortHits", snortHits);
-            
-            // Get daily time-series data for visualization
-            Map<String, Object> timeseriesResult = sessionDataService.getDailyTimeseriesData(start, end);
-            response.put("timeseriesData", timeseriesResult.get("dailyData"));
-            response.put("totalHitsInRange", timeseriesResult.get("totalHits"));
+            return analytics.toApiResponse();
             
         } catch (DateTimeParseException e) {
             response.put("error", "Invalid date format. Use YYYY-MM-DD");

@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
+//reading and parsing compressed JSON data from uploaded files.
 public class GzipJsonReader {
 
     public static List<Map<String, Object>> readGzipJsonStream(InputStream inputStream) throws IOException {

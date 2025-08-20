@@ -11,9 +11,10 @@ public class SessionDataProcessor {
     
     private static final String TIMESTAMP_FIELD = "@timestamp";
     
-    public Map<String, Object> processHit(Hit<Map<String, Object>> hit) {
+    public Map<String, Object> processHit(Hit<Map<String, Object>> hit) { //flattened and subset of the document
         Map<String, Object> session = hit.source(); //raw opensearch hit data
         
+        // extract necessary data for chart. (metadata, snort alerts)
         Map<String, Object> processed = new HashMap<>();
         processed.put("timestamp", session.get(TIMESTAMP_FIELD));
         processed.put("indexName", hit.index());
@@ -30,20 +31,22 @@ public class SessionDataProcessor {
         return processed;
     }
     
+    //normalizes sid field
     public List<Long> extractSids(Object sidObj) {
         if (sidObj instanceof List) {
             @SuppressWarnings("unchecked")
-            List<Object> sidList = (List<Object>) sidObj;
+            List<Object> sidList = (List<Object>) sidObj; 
             return sidList.stream()
                 .filter(s -> s instanceof Number)
                 .map(s -> ((Number) s).longValue())
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()); //convert to List<Long> if list of Num
         } else if (sidObj instanceof Number) {
-            return List.of(((Number) sidObj).longValue());
+            return List.of(((Number) sidObj).longValue()); //if part of Number(e.g int, double), wrap into a list
         }
-        return new ArrayList<>();
+        return new ArrayList<>(); //return empty list
     }
     
+    //list of document fields to retrieved from OpenSearch.
     public String[] getDetailedFields() {
         return new String[]{
             TIMESTAMP_FIELD,
@@ -58,6 +61,8 @@ public class SessionDataProcessor {
         };
     }
     
+
+    //helper class to extracts nested values
     private Object getNestedValue(Map<String, Object> source, String... keys) {
         Object current = source;
         for (String key : keys) {

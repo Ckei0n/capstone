@@ -3,7 +3,7 @@
   "realm": "stone-realm",
   "displayName": "",
   "displayNameHtml": "",
-  "notBefore": 0,
+  "notBefore": 1755567676,
   "defaultSignatureAlgorithm": "RS256",
   "revokeRefreshToken": false,
   "refreshTokenMaxReuse": 0,
@@ -825,11 +825,11 @@
       "clientAuthenticatorType": "client-secret",
       "secret": "**********",
       "redirectUris": [
-        "http://app.onik/*",
-        "http://app.onik/login/oauth2/code/keycloak"
+        "https://app.onik/login/oauth2/code/keycloak",
+        "https://app.onik/*"
       ],
       "webOrigins": [
-        "http://app.onik"
+        "https://app.onik"
       ],
       "notBefore": 0,
       "bearerOnly": false,
@@ -2388,7 +2388,7 @@
     "oauth2DeviceCodeLifespan": "600",
     "parRequestUriLifespan": "60",
     "clientSessionMaxLifespan": "0",
-    "frontendUrl": "http://app.onik",
+    "frontendUrl": "https://app.onik",
     "organizationsEnabled": "false",
     "acr.loa.map": "{}"
   },

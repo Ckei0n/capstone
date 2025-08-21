@@ -1,9 +1,8 @@
 import React from 'react';
 import './ResultsSummary.css';
 
-// Displays summary statistics from API responses.
+// Displays summary statistics from API response.
 
-// Conditionally renders summary statistics in formatted layout
 const ResultsSummary = ({ results }) => {
   if (!results) return null;
 

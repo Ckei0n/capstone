@@ -1,79 +1,86 @@
-//Handles data transformation and processing
+// Transforms raw API response data into structured format required for D3.js.
 
 import { generateColorForCommunityId } from './colorUtils';
 
+
+// Responsible for transforming API response data into chart-ready format.
 export const processDailyData = (dailyData) => {
   if (!dailyData || !Array.isArray(dailyData)) {
     return { processedData: [], communityData: [] };
   }
   
-  // Filter for days with hits and sort by date
+  // Filter for days with snort hits and sort by date
   const daysWithHits = dailyData
     .filter(d => d.hitCount && d.hitCount > 0)
     .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
   
-  // Process daily data
+  // Transform daily data into standardized format
   const processedData = daysWithHits.map(d => ({
-    date: new Date(d.timestamp),
-    hitCount: d.hitCount,
-    dateString: d.date,
-    singaporeDate: d.singaporeDate || d.date,
-    communityIds: d.communityIds || [],
-    communityIdHitCounts: d.communityIdHitCounts || {},
-    sids: d.sids || [],
-    sampleSessions: d.sampleSessions || []
+    date: new Date(d.timestamp), // Convert to Date object for D3
+    hitCount: d.hitCount, // Total hits for the day
+    singaporeDate: d.singaporeDate, // Singapore timezone date
+    communityIds: d.communityIds || [], // List of Community IDs active this day
+    communityIdHitCounts: d.communityIdHitCounts || {}, // // Hit counts per Community ID
+    sids: d.sids || [], //  Snort sids 
+    sampleSessions: d.sampleSessions || [] // Sample session data for quick access
   }));
   
-  // Create community ID data for multi-line chart
+  // Create multi-line chart data grouped by Community ID
   const communityData = processCommunityDataComplete(daysWithHits);
   
   return { processedData, communityData };
 };
 
+// creates separate lines for each Community ID, ensures that each line has data points for all dates in the range (filling in zeros where no snorts occurred). 
 export const processCommunityDataComplete = (dailyData) => {
   if (!dailyData || dailyData.length === 0) return [];
   
+  // Get date range and all Community IDs
   const allDates = getAllDates(dailyData);
   const allCommunityIds = getAllCommunityIds(dailyData);
   
+  // / Create lines for each Community ID
   return createCommunityLines(allDates, allCommunityIds, dailyData);
 };
 
+// Extracts and sorts all unique dates from the daily data
 const getAllDates = (dailyData) => {
   return dailyData
     .map(day => ({
       date: new Date(day.timestamp),
-      dateString: day.date,
       singaporeDate: day.singaporeDate || day.date
     }))
     .sort((a, b) => a.date - b.date);
 };
 
+// Extracts all unique Community IDs from the dataset
 const getAllCommunityIds = (dailyData) => {
   const allCommunityIds = new Set();
   
   dailyData.forEach(day => {
     if (day.communityIdHitCounts) {
       Object.keys(day.communityIdHitCounts).forEach(id => allCommunityIds.add(id));
-    } else if (day.communityIds) {
-      day.communityIds.forEach(id => allCommunityIds.add(id));
     }
   });
   
   return allCommunityIds;
 };
 
+
+// Creates individual lines for each Community ID
 const createCommunityLines = (allDates, allCommunityIds, dailyData) => {
   const communityLines = [];
   
   allCommunityIds.forEach(communityId => {
+    // Create data points for this Community ID across all dates
     const dataPoints = createDataPoints(allDates, communityId, dailyData);
     
+    // // Only include Community IDs that have at least 1 sid
     if (dataPoints.some(p => p.hitCount > 0)) {
       communityLines.push({
         communityId: communityId,
-        dataPoints: dataPoints,
-        color: generateColorForCommunityId(communityId)
+        dataPoints: dataPoints,  // Time series data points
+        color: generateColorForCommunityId(communityId) // color for this line
       });
     }
   });
@@ -81,10 +88,12 @@ const createCommunityLines = (allDates, allCommunityIds, dailyData) => {
   return communityLines;
 };
 
+// Creates data points for a specific Community ID across all dates
 const createDataPoints = (allDates, communityId, dailyData) => {
   return allDates.map(dateInfo => {
+    // Find the day's data that matches this date
     const dayData = dailyData.find(day => 
-      (day.singaporeDate || day.date) === dateInfo.singaporeDate
+      day.singaporeDate === dateInfo.singaporeDate
     );
     
     let communityCount = 0;
@@ -92,21 +101,20 @@ const createDataPoints = (allDates, communityId, dailyData) => {
       communityCount = getCommunityCount(dayData, communityId);
     }
     
+    // Create standardized data point
     return {
       date: dateInfo.date,
-      hitCount: communityCount,
+      hitCount: communityCount, // Number of hits for this Community ID
       singaporeDate: dateInfo.singaporeDate,
-      dateString: dateInfo.dateString
     };
   });
 };
 
+// Extracts hit count for a specific Community ID from day data
 const getCommunityCount = (dayData, communityId) => {
   if (dayData.communityIdHitCounts && dayData.communityIdHitCounts[communityId]) {
     return dayData.communityIdHitCounts[communityId];
-  } else if (dayData.communityIds && dayData.communityIds.includes(communityId)) {
-    // Fallback: estimate if exact counts not available
-    return Math.ceil(dayData.hitCount / dayData.communityIds.length);
-  }
+  } 
+
   return 0;
 };

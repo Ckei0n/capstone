@@ -17,7 +17,7 @@ const UploadPage = () => {
         try {
             // Request CSRF token from server
             const response = await axios.get('/api/csrf', {
-            withCredentials: true //include cookies in request
+            withCredentials: true // include cookies in cross-origin requests, but only if CORS policies allow it.
             });
             setCsrfToken(response.data); // Store token in state for later use
         } catch (error) {
@@ -29,9 +29,9 @@ const UploadPage = () => {
         fetchCsrfToken();
     }, []); // Empty dependency array = run once on mount
 
-    //Triggered when user selects files via file input, Updates component state with selected files
+    // Triggered when user selects files via file input, Updates component state with selected files
     const handleFileChange = (e) => {
-        setFiles(e.target.files); //FileList object
+        setFiles(e.target.files); // FileList object
     };
 
     const handleUpload = async () => {
@@ -47,8 +47,8 @@ const UploadPage = () => {
         try {
             const response = await axios.post("/api/import", formData, {
                 headers: {
-                    "Content-Type": "multipart/form-data", // Set content type for file uploads
-                    [csrfToken.headerName]: csrfToken.token // // Include CSRF token in header, header name comes from server
+                    "Content-Type": "multipart/form-data", // content type for file uploads
+                    [csrfToken.headerName]: csrfToken.token // Include CSRF token in header
                 },
                 withCredentials: true, // Include cookies for session management
                 onUploadProgress: (progressEvent) => {

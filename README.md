@@ -32,6 +32,6 @@ Able to use javascript library (e.g. D3.js) to give visual display (line, pie ch
 # **Rough Timeline**  
 29-07-25 to 07-08-25 (8 working days): created minimium viable project with nginx reverse proxy that meets the deliverables.  
 07-08-25 to 12-08-25 (4 working days): Implemented basic CI pipeline with unit tests in github actions, refactoring and documentation.  
-12-08-25 to 15-08-25 (3 working days): Use domain name instead of localhost to mirror prod env, partial implementation of HTTPS.  
+12-08-25 to 15-08-25 (4 working days): Use domain name instead of localhost to mirror prod env, partial implementation of HTTPS.  
 18-08-25 to 21-08-25 (4 working days): complete implementation of HTTPS to most routes. implemented Cypress to showcase e2e tests.  
 

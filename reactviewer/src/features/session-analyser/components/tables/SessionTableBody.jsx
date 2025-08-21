@@ -1,25 +1,21 @@
 import React from 'react';
 import './SessionTableBody.css';
 
+// Displays the actual session data in a table format. Each row represents one network session that triggered a Snort alert.
+
+// sessions: Array of session object to display, totalAvailable: total number of session available, used if the specific day has no sessions.
 const SessionTableBody = ({ sessions, totalAvailable }) => {
   const formatTimestamp = (timestamp) => {
     return new Date(timestamp).toLocaleString();
   };
 
+  // Formats array fields for display in table cells, converts arrays to comma-separated strings, used for fields like SIDs and Snort messages that can be arrays
   const formatArrayField = (field) => {
     if (Array.isArray(field)) {
       return field.join(', ');
     }
     return field || 'N/A';
   };
-
-  if (sessions.length === 0 && totalAvailable > 0) {
-    return (
-      <div className="no-sessions">
-        No sessions match the current filters. Try adjusting your filter criteria.
-      </div>
-    );
-  }
 
   if (totalAvailable === 0) {
     return (

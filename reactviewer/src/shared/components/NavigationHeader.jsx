@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import './NavigationHeader.css';
 
-// Purpose: Renders navigation links for the application. 
+// Renders navigation links for the application. 
 const NavigationHeader = () => {
   return (
     <div className="nav-links">

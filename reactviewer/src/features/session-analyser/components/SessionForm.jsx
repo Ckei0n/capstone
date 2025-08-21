@@ -1,15 +1,17 @@
 import React from 'react';
 import './SessionForm.css';
 
-//Handles all form input rendering and user interactions. 
+
+
+// renders the date range input form for querying session data, used to trigger an API call to fetch session analytics for the specified date range.
 
 const SessionForm = ({ 
-  startDate, 
-  setStartDate, 
-  endDate, 
-  setEndDate, 
-  onSubmit, 
-  loading 
+  startDate, //string value of start date
+  setStartDate, //function to update start date state
+  endDate, //string value of end date
+  setEndDate, //function to update the end date state
+  onSubmit, //function to trigger data retrieval after form is submitted
+  loading  //checks if an api call is in progress
 }) => {
   return (
     <form onSubmit={onSubmit} className="session-form">

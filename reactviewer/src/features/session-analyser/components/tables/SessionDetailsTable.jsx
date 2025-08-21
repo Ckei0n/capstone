@@ -1,14 +1,15 @@
 import React from 'react';
 import { useSessionData } from '../hooks/useSessionData';
-import { useSessionFilters } from '../hooks/useSessionFilters';
 import SessionTableHeader from './SessionTableHeader';
 import SessionTableBody from './SessionTableBody';
 import './SessionDetailsTable.css';
 
+
+//used to display detailed session data. renders when user clicks on a data point in the chart.
 const SessionDetailsTable = ({ 
-  selectedDay, 
-  onClose, 
-  dateRange 
+  selectedDay, // Object containing the clicked day's data
+  onClose, // Function to close the detail view and return to chart
+  dateRange // Object with startDate/endDate for API calls
 }) => {
   // Handle session data loading
   const {
@@ -19,9 +20,6 @@ const SessionDetailsTable = ({
     loadAllSessions
   } = useSessionData(selectedDay, dateRange);
 
-  // No filtering - just pass through the sessions
-  const sessions = useSessionFilters(allAvailableSessions);
-
   // return if no selected day
   if (!selectedDay) return null;
 
@@ -30,9 +28,8 @@ const SessionDetailsTable = ({
   return (
     <div className="session-details-container" data-cy="session-details-container">
       <SessionTableHeader
-        selectedDate={selectedDay.date}
-        sessionCount={sessions.length}
-        totalAvailable={allAvailableSessions.length}
+        selectedDate={selectedDay.singaporeDate}
+        sessionCount={allAvailableSessions.length}
         totalSessions={totalSessions}
         showingAll={showingAll}
         hasMoreSessions={selectedDay.hasMoreSessions}
@@ -45,7 +42,7 @@ const SessionDetailsTable = ({
       {error && <div className="error" data-cy="session-error">{error}</div>}
 
       <SessionTableBody
-        sessions={sessions}
+        sessions={allAvailableSessions}
         totalAvailable={allAvailableSessions.length}
       />
     </div>

@@ -1,30 +1,32 @@
-// Builds chart components (scales, axes, legends, lines)
-
 import * as d3 from 'd3';
 
+// Handles the creation of all visual components for the timeseries chart.
 export class ChartBuilder {
   constructor(g, chartWidth, chartHeight, margin) {
-    this.g = g;
+    this.g = g; // D3 selection for the main chart container
     this.chartWidth = chartWidth;
     this.chartHeight = chartHeight;
-    this.margin = margin;
+    this.margin = margin; // Margins for axes, labels, and legend space
   }
 
+  // This method creates both X and Y scales for the chart:
   createScales(communityData) {
     const { allDates, allHitCounts } = this.extractScaleData(communityData);
     
     const xScale = d3.scaleTime()
-      .domain(d3.extent(allDates))
+      .domain(d3.extent(allDates)) // From earliest to latest date
       .range([0, this.chartWidth]);
 
+    // Y-axis: Linear scale for hit counts (bottom to top)
     const maxHits = d3.max(allHitCounts) || 0;
     const yScale = d3.scaleLinear()
       .domain([0, maxHits * 1.1])
-      .range([this.chartHeight, 0]);
+      .range([this.chartHeight, 0]); // Inverted: 0 at bottom, max at top
 
     return { xScale, yScale };
   }
 
+  // Extracts all dates and hit counts from community data for scale calculation. Flattens the nested data structure to get all unique dates and hit count values across all community lines.
   extractScaleData(communityData) {
     const allDates = [];
     const allHitCounts = [];
@@ -39,6 +41,8 @@ export class ChartBuilder {
     return { allDates, allHitCounts };
   }
 
+
+  // This method builds the chart axes with appropriate tick formatting, labels, and positioning.
   createAxes(scales, communityData) {
     const { xScale, yScale } = scales;
     
@@ -48,8 +52,9 @@ export class ChartBuilder {
     this.renderXAxis(xAxis);
     this.renderYAxis(yAxis);
     this.addAxisLabels();
-  }
+  } 
 
+  // Creates X-axis generator with tick spacing
   createXAxis(xScale, communityData) {
     const uniqueDates = this.getUniqueDates(communityData);
     const dataPointCount = uniqueDates.length;
@@ -57,9 +62,11 @@ export class ChartBuilder {
     const xAxis = d3.axisBottom(xScale)
       .tickFormat(d3.timeFormat("%Y-%m-%d"));
       
+    // Adjust tick density based on data volume
     if (dataPointCount <= 10) {
       xAxis.tickValues(uniqueDates);
     } else if (dataPointCount <= 30) {
+      // Medium: show every nth day
       xAxis.ticks(d3.timeDay.every(Math.ceil(dataPointCount / 10)));
     } else {
       xAxis.ticks(d3.timeDay.every(1));
@@ -74,6 +81,7 @@ export class ChartBuilder {
       .ticks(10);
   }
 
+  // Gets unique dates from all community data points
   getUniqueDates(communityData) {
     const allDates = [];
     communityData.forEach(community => {
@@ -85,6 +93,7 @@ export class ChartBuilder {
     return [...new Set(allDates.map(d => d.getTime()))].map(t => new Date(t));
   }
 
+  // renders x axis with rotated labela
   renderXAxis(xAxis) {
     this.g.append("g")
       .attr("class", "x-axis")
@@ -97,12 +106,14 @@ export class ChartBuilder {
       .attr("transform", "rotate(-45)");
   }
 
+  // renders y-axis
   renderYAxis(yAxis) {
     this.g.append("g")
       .attr("class", "y-axis")
       .call(yAxis);
   }
 
+  //add labels for both axes
   addAxisLabels() {
     // Y-axis label
     this.g.append("text")
@@ -124,6 +135,7 @@ export class ChartBuilder {
       .text("Date");
   }
 
+  // Creates color-coded legend for multi-line chart
   createLegend(communityData) {
     const legend = this.g.append("g")
       .attr("class", "legend")
@@ -153,6 +165,7 @@ export class ChartBuilder {
     return legend;
   }
 
+  // Formats long Community IDs for display in legend
   formatCommunityId(communityId) {
     if (communityId.length > 20) {
       return communityId.substring(0, 8) + '...' + communityId.substring(communityId.length - 4);
@@ -160,30 +173,35 @@ export class ChartBuilder {
     return communityId;
   }
 
+  //Draws the multi-line chart with interactive data points
   drawLines(communityData, scales, interactionHandler) {
     const { xScale, yScale } = scales;
     
+    // Create D3 line generator with smooth curves
     const line = d3.line()
       .x(d => xScale(d.date))
       .y(d => yScale(d.hitCount))
       .curve(d3.curveCardinal.tension(0.5))
       .defined(d => d.hitCount !== null);
 
+    // Create groups for each community line
     const communityLines = this.g.selectAll(".community-line")
       .data(communityData)
       .enter()
       .append("g")
       .attr("class", "community-line");
 
+    // Add line paths and interactive data points
     this.addLinePaths(communityLines, line);
     this.addDataPoints(communityLines, xScale, yScale, interactionHandler);
   }
 
+  // this function creates line paths that connect data points for each Community ID
   addLinePaths(communityLines, line) {
     communityLines.append("path")
-      .datum(d => d.dataPoints)
+      .datum(d => d.dataPoints) // Bind data points to each path
       .attr("class", "line")
-      .attr("d", line)
+      .attr("d", line) // Generate path using line function
       .style("fill", "none")
       .style("stroke", (d, i, nodes) => {
         const parentData = d3.select(nodes[i].parentNode).datum();
@@ -195,10 +213,12 @@ export class ChartBuilder {
       .style("stroke-linecap", "round");
   }
 
+  //Adds interactive data points (circles) to each line
   addDataPoints(communityLines, xScale, yScale, interactionHandler) {
     communityLines.each(function(communityLineData) {
       const communityGroup = d3.select(this);
       
+      // Add circles only for data points with hits (exclude zero values)
       communityGroup.selectAll(".data-point")
         .data(communityLineData.dataPoints.filter(d => d.hitCount > 0))
         .enter()

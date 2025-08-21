@@ -1,3 +1,6 @@
+// This file handles all API communication.
+
+// Base URL for all API endpoints, relative to current domain
 const API_BASE_URL = '/api';
 
 export const fetchSessionData = async (startDate, endDate) => {
@@ -18,6 +21,8 @@ export const fetchSessionData = async (startDate, endDate) => {
     return data;
 };
 
+
+// Fetches detailed session data for a specific day. Triggered when users click "Load All Sessions" in the session details table. It retrieves all session information for a single day
 export const fetchDailySessionDetails = async (startDate, endDate, date) => {
     const url = new URL(`${API_BASE_URL}/sessions/daily-details`, window.location.origin);
     url.searchParams.append('start', startDate);
@@ -37,12 +42,13 @@ export const fetchDailySessionDetails = async (startDate, endDate, date) => {
     return data;
 };
 
+// Uploads files to the server for data import
 export const uploadFiles = async (files) => {
+    // Create FormData object for file upload
     const formData = new FormData();
     files.forEach(file => {
         formData.append('files', file);
     });
-    
     const response = await fetch(`${API_BASE_URL}/import`, {
         method: 'POST',
         body: formData

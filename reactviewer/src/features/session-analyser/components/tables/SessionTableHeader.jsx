@@ -1,17 +1,18 @@
 import React from 'react';
 import './SessionTableHeader.css';
 
+
+//header section for the session table. 
 const SessionTableHeader = ({
-  selectedDate,
-  sessionCount,
-  totalAvailable,
-  totalSessions,
-  showingAll,
-  hasMoreSessions,
-  loading,
-  onLoadAll,
-  onClose,
-  selectedCommunityId
+  selectedDate, //string value of date
+  sessionCount, // number of network sessions being displayed on table
+  totalSessions, //total number of sessions in that day
+  showingAll, //indicate if all sessions have been shown
+  hasMoreSessions, //indicate if there are more sessions that can be loaded (used as a flag for btn)
+  loading, // boolean for loading state of the load all button
+  onLoadAll, //function to trigger loading all sessions
+  onClose, //function to close the table
+  selectedCommunityId //show community id of specific data point
 }) => {
   const formatCommunityId = (communityId) => {
     if (!communityId) return '';
@@ -23,6 +24,7 @@ const SessionTableHeader = ({
   };
 
   return (
+    // Main title showing the date and optional Community ID filter
     <div className="session-details-header" data-cy="session-details-header">
       <h3>
         Session Details for {selectedDate}
@@ -34,7 +36,7 @@ const SessionTableHeader = ({
       </h3>
       <div className="session-details-controls">
         <span className="session-count">
-          Showing {sessionCount} of {totalAvailable} sessions
+          Showing {sessionCount} of {totalSessions} sessions
           {selectedCommunityId && ' for selected Community ID'}
         </span>
         {!showingAll && hasMoreSessions && (
@@ -46,8 +48,8 @@ const SessionTableHeader = ({
           >
             {loading ? 'Loading...' : 
               selectedCommunityId 
-                ? `Load All Sessions for Community ID` 
-                : `Load All ${totalSessions} Sessions`
+                ? `Load All Sessions for Community ID` // When filtering by Community ID
+                : `Load All ${totalSessions} Sessions` // When showing all sessions for the day
             }
           </button>
         )}

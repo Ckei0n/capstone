@@ -75,8 +75,9 @@ const UploadPage = () => {
                 type="file" 
                 multiple 
                 onChange={handleFileChange} 
+                data-cy="file-input"
             />
-            <button onClick={handleUpload}>Upload</button>
+            <button onClick={handleUpload} data-cy="upload-btn">Upload</button>
             <progress value={progress} max="100" />
             <p>{progress}%</p>
             {message && <p>{message}</p>}

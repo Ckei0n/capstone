@@ -23,10 +23,7 @@ describe('Upload Gzip files flow', () => {
         console.log('Upload request:', req.body);
     }).as('uploadFile');
   
-    cy.get('[data-cy=file-input]').attachFile({
-        filePath: 'fake_trend_sessions_utc_time.gz',
-        encoding: 'binary', // Explicitly specify binary encoding
-    });
+    cy.get('[data-cy=file-input]').selectFile('cypress/fixtures/fake_trend_sessions_utc_time.gz');
     
     cy.get('[data-cy=upload-btn]').click();
 

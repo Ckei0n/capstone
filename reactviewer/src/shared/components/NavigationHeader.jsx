@@ -6,7 +6,7 @@ import './NavigationHeader.css';
 const NavigationHeader = () => {
   return (
     <div className="nav-links">
-      <Link to="/api/import">Go to File Uploader</Link>
+      <Link to="/api/import" data-cy="upload-link">Go to File Uploader</Link>
     </div>
   );
 };

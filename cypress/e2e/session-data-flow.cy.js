@@ -12,8 +12,8 @@ describe('Session Data Analysis Flow', () => {
     cy.get('.session-form').should('be.visible')
     
     //use this date range to test api
-    const startDate = '2025-08-12'
-    const endDate = '2025-08-19'
+    const startDate = '2025-08-21'
+    const endDate = '2025-08-30'
     
     //Fill in the dates
     cy.get('input[type="date"]').first().clear().type(startDate)

@@ -4,6 +4,13 @@ updates:
     directory: "/reactviewer"
     schedule:
       interval: "daily"
+    open-pull-requests-limit: 0
+    labels:
+      - "npm dependencies"
+      - "triage-board"
+    # Raise all npm pull requests for security updates with assignees
+    assignees:
+      - "Ckei0n"
     groups:
       security-updates:
         applies-to: security-updates
@@ -14,12 +21,7 @@ updates:
     directory: "/capstone/stone"
     schedule:
       interval: "daily"
-    labels:
-      - "npm dependencies"
-      - "triage-board"
-    # Raise all npm pull requests for security updates with assignees
-    assignees:
-      - "Ckei0n"
+    open-pull-requests-limit: 0
     groups:
       security-updates:
         applies-to: security-updates

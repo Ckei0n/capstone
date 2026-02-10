@@ -1,0 +1,27 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/reactviewer"
+    schedule:
+      interval: "daily"
+    groups:
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
+ # Java/Spring Boot dependencies (Maven)
+  - package-ecosystem: "maven"
+    directory: "/capstone/stone"
+    schedule:
+      interval: "daily"
+    labels:
+      - "npm dependencies"
+      - "triage-board"
+    # Raise all npm pull requests for security updates with assignees
+    assignees:
+      - "Ckei0n"
+    groups:
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
